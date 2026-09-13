@@ -56,24 +56,30 @@ async function init(classId) {
     }
 
     if (s.pdfPath) {
-      document.getElementById("current-pdf-name").textContent = `현재 등록된 양식: ${s.pdfName || ""}`;
       document.getElementById("btn-delete-template").style.display = "inline-flex";
-      // 페이지에 막 들어왔을 때는 로그인/스토리지 초기화가 아직 끝나지 않아 첫 시도가
-      // 실패하는 경우가 있어, 바로 오류를 보여주지 않고 잠깐 기다렸다가 한 번 더 시도한다.
-      try {
-        if (!s.pdfBytes) {
-          try {
-            s.pdfBytes = await getBytes(ref(storage, s.pdfPath));
-          } catch (firstErr) {
-            toast("불러오는 중입니다. 잠시만 기다려주세요...");
-            await new Promise((r) => setTimeout(r, 1000));
-            s.pdfBytes = await getBytes(ref(storage, s.pdfPath));
-          }
+      const nameEl = document.getElementById("current-pdf-name");
+      // Storage 접근 권한 확인 과정에서 시간이 걸릴 수 있어(내부적으로 학급 소유자 확인 절차가
+      // 추가됨), 바로 오류로 보여주지 않고 여유 있게 여러 번 다시 시도한다.
+      const maxAttempts = 6;
+      let lastErr = null;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        nameEl.textContent = "불러오는 중입니다. 잠시만 기다려주세요...";
+        try {
+          if (!s.pdfBytes) s.pdfBytes = await getBytes(ref(storage, s.pdfPath));
+          await renderPdf(s);
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e;
+          s.pdfBytes = null;
+          if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, attempt * 1000));
         }
-        await renderPdf(s);
-      } catch (e) {
-        console.error(e);
-        toast("기존 양식 파일을 불러오지 못했습니다. 다시 업로드해주세요.", true);
+      }
+      if (lastErr) {
+        console.error(lastErr);
+        nameEl.textContent = "불러오는 데 시간이 걸리고 있어요. 잠시 후 이 화면을 새로고침해보세요.";
+      } else {
+        nameEl.textContent = `현재 등록된 양식: ${s.pdfName || ""}`;
       }
     }
   }
