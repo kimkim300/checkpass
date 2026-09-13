@@ -104,7 +104,8 @@ async function init() {
       await submitDoc();
     } catch (err) {
       console.error(err);
-      toast("제출 중 오류가 발생했습니다: " + err.message, true);
+      toast(err.message || "제출 중 오류가 발생했습니다.", true);
+    } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = "제출하기";
     }
