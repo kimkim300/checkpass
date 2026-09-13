@@ -1,6 +1,6 @@
 import { db, storage, doc, getDoc, setDoc, deleteDoc, ref, uploadBytes, getBytes, deleteObject, serverTimestamp } from "./firebase-init.js";
 import { requireTeacherPage } from "./nav.js";
-import { guardConfig, toast, DOC_TYPES, FIELD_TARGETS_BY_TYPE } from "./utils.js";
+import { guardConfig, toast, escapeHtml, DOC_TYPES, FIELD_TARGETS_BY_TYPE } from "./utils.js";
 import { fillTemplate, SAMPLE_VALUES } from "./pdf-fill.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -133,6 +133,17 @@ async function init(classId) {
     const s = getState(currentType);
     const wrap = document.getElementById("field-list");
     wrap.innerHTML = "";
+
+    const targets = fieldTargets();
+    const placedCount = targets.filter((t) => s.fields[t.id]).length;
+    const missing = targets.filter((t) => !s.fields[t.id]);
+    const progressEl = document.getElementById("field-progress");
+    if (missing.length === 0) {
+      progressEl.innerHTML = `<div class="notice" style="background:var(--green-soft); color:var(--green); margin-bottom:0">✅ ${targets.length}개 항목 모두 배치완료! "양식 저장"을 눌러주세요.</div>`;
+    } else {
+      progressEl.innerHTML = `<div class="notice" style="margin-bottom:0">⚠️ ${targets.length}개 중 ${placedCount}개 배치됨 — 아직 남은 항목: ${missing.map((m) => escapeHtml(m.label)).join(", ")}</div>`;
+    }
+
     for (const target of fieldTargets()) {
       const placed = s.fields[target.id];
       const row = document.createElement("div");

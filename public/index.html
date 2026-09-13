@@ -11,26 +11,28 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AB</text></svg>">
 </head>
 <body>
-<div class="wrap narrow">
-  <div style="text-align:center; margin-top:56px; margin-bottom:8px; font-size:40px">🎫</div>
-  <h1 class="title-gradient" style="text-align:center; margin-top:0; font-size:28px">출결패스</h1>
-  <p class="page-sub" style="text-align:center">학교 서류를 온라인으로 받고 관리하는 서비스입니다.</p>
-
-  <div class="tabbar" id="role-tabbar" style="margin:0 auto 18px; width:100%; justify-content:center">
-    <button class="active" data-role="teacher" style="flex:1">👩‍🏫 선생님</button>
-    <button data-role="parent" style="flex:1">👨‍👩‍👧 학부모</button>
+<div class="wrap home">
+  <div class="home-hero">
+    <div class="home-hero-icon">🎫</div>
+    <h1 class="title-gradient home-title">출결패스</h1>
+    <p class="home-tagline">학교 서류를 온라인으로 간편하게 받고 관리하세요</p>
   </div>
 
-  <div id="role-teacher" class="card">
+  <div class="tabbar home-role-tabbar" id="role-tabbar">
+    <button class="active" data-role="teacher">👩‍🏫 선생님</button>
+    <button data-role="parent">👨‍👩‍👧 학부모</button>
+  </div>
+
+  <div id="role-teacher" class="card home-card">
     <div class="home-icon mint">👩‍🏫</div>
-    <h2 style="margin-bottom:4px">선생님이신가요?</h2>
+    <h2>선생님이신가요?</h2>
     <p class="page-sub">관리자 번호로 입장해서 학급을 관리하세요.</p>
     <a href="teacher.html" class="btn btn-primary btn-block">관리자 번호로 입장</a>
   </div>
 
-  <div id="role-parent" class="card" style="display:none">
+  <div id="role-parent" class="card home-card" style="display:none">
     <div class="home-icon yellow">👨‍👩‍👧</div>
-    <h2 style="margin-bottom:4px">학부모이신가요?</h2>
+    <h2>학부모이신가요?</h2>
     <p class="page-sub" style="margin-bottom:16px">학급 이름과 비밀번호를 입력해주세요. 담임 선생님께 받은 링크로 바로 오셨다면 이 단계는 건너뛰어도 됩니다.</p>
     <form id="parent-form">
       <div class="field">
