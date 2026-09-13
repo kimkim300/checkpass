@@ -205,6 +205,9 @@ async function init(classId) {
       if (!f) continue;
       const el = document.createElement("div");
       el.style.pointerEvents = "auto";
+      el.tabIndex = 0;
+      el.dataset.targetId = target.id;
+      el.title = "클릭 후 방향키로 미세 조정 (Shift+방향키: 5pt씩)";
       if (target.type === "sig") {
         el.className = "field-marker sig-marker";
         el.style.position = "absolute";
@@ -220,8 +223,29 @@ async function init(classId) {
         el.innerHTML = `<span class="tag">${target.label}</span>`;
       }
       makeDraggable(el, f);
+      makeNudgeable(el, f, target.id);
       layer.appendChild(el);
     }
+  }
+
+  function makeNudgeable(el, f, targetId) {
+    el.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 5 : 1;
+      let dx = 0, dy = 0;
+      if (e.key === "ArrowLeft") dx = -step;
+      else if (e.key === "ArrowRight") dx = step;
+      else if (e.key === "ArrowUp") dy = step;
+      else if (e.key === "ArrowDown") dy = -step;
+      else return;
+      e.preventDefault();
+      f.x += dx;
+      f.y += dy;
+      renderMarkers();
+      renderFieldList();
+      const layer = document.getElementById("marker-layer");
+      const refocus = layer.querySelector(`[data-target-id="${targetId}"]`);
+      if (refocus) refocus.focus();
+    });
   }
 
   function makeDraggable(el, f) {
