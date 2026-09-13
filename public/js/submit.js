@@ -4,7 +4,7 @@ import {
 } from "./firebase-init.js";
 import {
   guardConfig, toast, getParam, countWeekdays, formatKoreanDate, todayStr, escapeHtml,
-  REASON_SUBTYPES, DOC_TYPES, DIRECT_INPUT,
+  REASON_SUBTYPES, DOC_TYPES, DIRECT_INPUT, getDocType,
 } from "./utils.js";
 import { createSignaturePad } from "./signature-pad.js";
 import { fillTemplate } from "./pdf-fill.js";
@@ -190,7 +190,11 @@ async function init() {
       values,
       signatureDataUrl: sigPad.toDataUrl(),
     });
-    const pdfPath = `submissions/${classId}/${recordId}.pdf`;
+    // 파일명을 "번호_이름_날짜_서류종류" 형태로 사람이 알아보기 쉽게 만든다.
+    // 같은 학생이 같은 날짜에 같은 서류를 다시 제출(반려 후 재제출 등)할 수도 있어서,
+    // 파일이 서로 덮어써지지 않도록 끝에 짧은 구분값을 붙인다.
+    const fileBase = `${student.number}_${student.name}_${startDate}_${getDocType(docType).label}`;
+    const pdfPath = `submissions/${classId}/${fileBase}_${recordId.slice(0, 6)}.pdf`;
     await uploadBytes(ref(storage, pdfPath), pdfBytes, { contentType: "application/pdf" });
 
     await setDoc(recRef, {
@@ -208,7 +212,9 @@ async function init() {
     });
 
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    document.getElementById("download-link").href = URL.createObjectURL(blob);
+    const downloadLink = document.getElementById("download-link");
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = `${fileBase}.pdf`;
     document.getElementById("submit-form").style.display = "none";
     document.getElementById("done-screen").style.display = "block";
   }

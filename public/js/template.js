@@ -72,7 +72,7 @@ async function init(classId) {
         } catch (e) {
           lastErr = e;
           s.pdfBytes = null;
-          if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, attempt * 1000));
+          if (attempt < maxAttempts) await new Promise((r) => setTimeout(r, 400 + attempt * 300));
         }
       }
       if (lastErr) {
