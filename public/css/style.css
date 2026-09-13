@@ -1,5 +1,5 @@
 :root {
-  --bg: #ffedad;
+  --bg: #ffdd1a;
   --card: #ffffff;
   --ink: #1e2a45;
   --sub: #5d6b85;
@@ -38,6 +38,15 @@ html, body {
   color: var(--ink);
   font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* 홈 화면은 단색, 로그인 후 안쪽 화면들은 은은한 그러데이션 */
+body.gradient-bg {
+  background:
+    radial-gradient(760px 420px at 12% -12%, #fff3a8 0%, transparent 62%),
+    radial-gradient(620px 360px at 105% 5%, #ffc23d 0%, transparent 55%),
+    var(--bg);
+  background-repeat: no-repeat;
 }
 
 a { color: inherit; }
@@ -100,12 +109,12 @@ a { color: inherit; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   background: var(--primary);
   border: var(--border-w) solid var(--ink);
-  font-size: 18px;
+  font-size: 21px;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
   transition: transform .08s ease, box-shadow .08s ease;
@@ -117,13 +126,13 @@ a { color: inherit; }
 .brand {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 17px;
+  font-size: 22px;
   white-space: nowrap;
 }
 .brand small {
   display: block;
-  font-weight: 500;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: 13.5px;
   color: var(--sub);
 }
 .tabs {
@@ -134,9 +143,9 @@ a { color: inherit; }
 }
 .tabs a {
   text-decoration: none;
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 15.5px;
   font-weight: 700;
   color: var(--sub);
   white-space: nowrap;
@@ -155,10 +164,10 @@ a { color: inherit; }
   border: none;
   background: none;
   color: var(--sub);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  padding: 8px 6px;
+  padding: 8px 8px;
 }
 
 h1 { font-family: var(--font-display); font-weight: 400; font-size: 29px; margin: 28px 0 4px; letter-spacing: -.2px; }
