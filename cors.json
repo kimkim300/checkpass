@@ -3,6 +3,7 @@
     "origin": [
       "https://checkpass0913.web.app",
       "https://checkpass0913.firebaseapp.com",
+      "https://checkpass-alpha.vercel.app",
       "http://localhost:5175"
     ],
     "method": ["GET", "PUT", "POST", "HEAD"],
