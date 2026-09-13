@@ -2,7 +2,10 @@ import {
   db, storage, doc, getDoc, setDoc, collection, getDocs,
   ref, uploadBytes, getBytes, serverTimestamp,
 } from "./firebase-init.js";
-import { guardConfig, toast, getParam, countWeekdays, formatKoreanDate, todayStr, escapeHtml, REASON_SUBTYPES } from "./utils.js";
+import {
+  guardConfig, toast, getParam, countWeekdays, formatKoreanDate, todayStr, escapeHtml,
+  REASON_SUBTYPES, DOC_TYPES,
+} from "./utils.js";
 import { createSignaturePad } from "./signature-pad.js";
 import { fillTemplate } from "./pdf-fill.js";
 
@@ -12,15 +15,18 @@ async function init() {
   const classId = getParam("class");
   if (!classId) return showError();
 
-  let cls, students, templateMeta;
+  let cls, students;
+  const templates = {}; // docType -> template meta (양식이 등록된 것만)
   try {
     const clsSnap = await getDoc(doc(db, "classes", classId));
     if (!clsSnap.exists()) return showError();
     cls = { id: clsSnap.id, ...clsSnap.data() };
 
-    const tplSnap = await getDoc(doc(db, "classes", classId, "meta", "template"));
-    if (!tplSnap.exists() || !tplSnap.data().pdfPath) return showError();
-    templateMeta = tplSnap.data();
+    for (const t of DOC_TYPES) {
+      const tplSnap = await getDoc(doc(db, "classes", classId, "templates", t.id));
+      if (tplSnap.exists() && tplSnap.data().pdfPath) templates[t.id] = tplSnap.data();
+    }
+    if (Object.keys(templates).length === 0) return showError();
 
     const stuSnap = await getDocs(collection(db, "classes", classId, "students"));
     students = [];
@@ -31,14 +37,28 @@ async function init() {
     return showError();
   }
 
-  document.getElementById("class-title").textContent = `${cls.name} 결석계 제출`;
+  document.getElementById("class-title").textContent = `${cls.name} 서류 제출`;
   document.getElementById("loading").style.display = "none";
   document.getElementById("submit-form").style.display = "block";
 
   const studentSel = document.getElementById("f-student");
   studentSel.innerHTML = students.map((s) => `<option value="${s.id}">${escapeHtml(s.number)}번 ${escapeHtml(s.name)}</option>`).join("");
 
-  const typeSel = document.getElementById("f-type");
+  const doctypeSel = document.getElementById("f-doctype");
+  doctypeSel.innerHTML = DOC_TYPES.filter((t) => templates[t.id]).map((t) => `<option value="${t.id}">${t.label}</option>`).join("");
+
+  function showSection(type) {
+    document.querySelectorAll(".doctype-section").forEach((el) => (el.style.display = "none"));
+    const map = { absence: "section-absence", tripApply: "section-tripApply", tripReport: "section-tripReport" };
+    document.getElementById(map[type]).style.display = "block";
+  }
+  doctypeSel.addEventListener("change", () => {
+    showSection(doctypeSel.value);
+    bindDateRecalc(doctypeSel.value);
+  });
+  showSection(doctypeSel.value);
+
+  const typeSel = document.getElementById("f-absenceType");
   const subtypeField = document.getElementById("subtype-field");
   const subtypeSel = document.getElementById("f-subtype");
   typeSel.addEventListener("change", () => {
@@ -51,16 +71,25 @@ async function init() {
     }
   });
 
-  const startEl = document.getElementById("f-start");
-  const endEl = document.getElementById("f-end");
-  const daysEl = document.getElementById("f-days");
-  function recalcDays() {
-    if (startEl.value && endEl.value && endEl.value >= startEl.value) {
-      daysEl.value = countWeekdays(startEl.value, endEl.value);
-    }
+  function activeSectionEl(type) {
+    const map = { absence: "section-absence", tripApply: "section-tripApply", tripReport: "section-tripReport" };
+    return document.getElementById(map[type]);
   }
-  startEl.addEventListener("change", recalcDays);
-  endEl.addEventListener("change", recalcDays);
+
+  function bindDateRecalc(type) {
+    const section = activeSectionEl(type);
+    const startEl = section.querySelector(".f-start");
+    const endEl = section.querySelector(".f-end");
+    const daysEl = section.querySelector(".f-days");
+    function recalc() {
+      if (startEl.value && endEl.value && endEl.value >= startEl.value) {
+        daysEl.value = countWeekdays(startEl.value, endEl.value);
+      }
+    }
+    startEl.onchange = recalc;
+    endEl.onchange = recalc;
+  }
+  bindDateRecalc(doctypeSel.value);
 
   const sigPad = createSignaturePad(document.getElementById("sig-canvas"));
   document.getElementById("btn-clear-sig").onclick = () => sigPad.clear();
@@ -72,66 +101,86 @@ async function init() {
     submitBtn.disabled = true;
     submitBtn.textContent = "제출 중...";
     try {
-      await submitAbsence();
+      await submitDoc();
     } catch (err) {
       console.error(err);
       toast("제출 중 오류가 발생했습니다: " + err.message, true);
       submitBtn.disabled = false;
-      submitBtn.textContent = "결석계 제출하기";
+      submitBtn.textContent = "제출하기";
     }
   });
 
-  async function submitAbsence() {
+  async function submitDoc() {
+    const docType = doctypeSel.value;
     const student = students.find((s) => s.id === studentSel.value);
-    const startDate = startEl.value, endDate = endEl.value;
-    const absenceType = typeSel.value;
-    const subtype = subtypeField.style.display !== "none" ? subtypeSel.value : "";
-    const reasonDetailRaw = document.getElementById("f-reason").value.trim();
-    const guardianName = document.getElementById("f-guardian").value.trim();
-    const reasonDetail = subtype ? `[${subtype}] ${reasonDetailRaw}` : reasonDetailRaw;
+    const section = activeSectionEl(docType);
+    const startDate = section.querySelector(".f-start").value;
+    const endDate = section.querySelector(".f-end").value;
+    const dayCount = Number(section.querySelector(".f-days").value || 0);
+    if (!startDate || !endDate) return toast("날짜를 입력해주세요.", true);
 
-    // 학부모는 다른 학생의 결석 기록을 읽을 권한이 없으므로(개인정보 보호),
-    // 기존 기록을 조회해 이어쓰지 않고 항상 새 기록을 생성한다.
-    // 담임이 미리 등록해둔 "서류대기" 기록이 있었다면 대시보드에서 중복 확인 후 삭제하면 된다.
-    const absRef = doc(collection(db, "classes", classId, "absences"));
-    const absenceId = absRef.id;
-
-    const periodText = `${formatKoreanDate(startDate)} ~ ${formatKoreanDate(endDate)} (${daysEl.value}일간)`;
+    const periodText = `${formatKoreanDate(startDate)} ~ ${formatKoreanDate(endDate)} (${dayCount}일간)`;
     const writeDate = formatKoreanDate(todayStr());
 
-    let photoPath = null;
-    const photoFile = document.getElementById("f-photo").files[0];
-    if (photoFile) {
-      photoPath = `photos/${classId}/${absenceId}_${photoFile.name}`;
-      await uploadBytes(ref(storage, photoPath), photoFile);
+    let values = { studentName: student.name, studentNumber: student.number, gender: student.gender || "", period: periodText, writeDate };
+    let recordExtra = {};
+
+    if (docType === "absence") {
+      const absenceType = document.getElementById("f-absenceType").value;
+      const subtype = subtypeField.style.display !== "none" ? subtypeSel.value : "";
+      const reasonDetailRaw = document.getElementById("f-reasonDetail").value.trim();
+      const guardianName = document.getElementById("f-guardianName").value.trim();
+      if (!absenceType || !reasonDetailRaw || !guardianName) return toast("필수 항목을 모두 입력해주세요.", true);
+      const reasonDetail = subtype ? `[${subtype}] ${reasonDetailRaw}` : reasonDetailRaw;
+      values = { ...values, absenceType, reasonDetail, guardianName };
+      recordExtra = { absenceType, subtype, reasonDetail, guardianName };
+    } else if (docType === "tripApply") {
+      const contact = document.getElementById("f-contact").value.trim();
+      const purpose = document.getElementById("f-purpose").value.trim();
+      const location = document.getElementById("f-location").value.trim();
+      const studyPlan = document.getElementById("f-studyPlan").value.trim();
+      const accompany = document.getElementById("f-accompany").value;
+      const contact5day = document.getElementById("f-contact5day").value;
+      if (!contact || !purpose || !location || !studyPlan || !accompany || !contact5day) return toast("필수 항목을 모두 입력해주세요.", true);
+      values = { ...values, contact, purpose, location, studyPlan, accompany, contact5day };
+      recordExtra = { contact, purpose, location, studyPlan, accompany, contact5day };
+    } else if (docType === "tripReport") {
+      const reportContent = document.getElementById("f-reportContent").value.trim();
+      if (!reportContent) return toast("학습 내용을 입력해주세요.", true);
+      values = { ...values, reportContent };
+      recordExtra = { reportContent };
     }
 
+    const recRef = doc(collection(db, "classes", classId, "records"));
+    const recordId = recRef.id;
+
+    let photoPath = null;
+    if (docType === "absence") {
+      const photoFile = document.getElementById("f-photo").files[0];
+      if (photoFile) {
+        photoPath = `photos/${classId}/${recordId}_${photoFile.name}`;
+        await uploadBytes(ref(storage, photoPath), photoFile);
+      }
+    }
+
+    const templateMeta = templates[docType];
     const templateBytes = await getBytes(ref(storage, templateMeta.pdfPath));
     const pdfBytes = await fillTemplate({
       templateBytes,
       fields: templateMeta.fields || {},
-      values: {
-        studentName: student.name,
-        studentNumber: student.number,
-        period: periodText,
-        reasonDetail,
-        guardianName,
-        writeDate,
-        gender: student.gender || "",
-        absenceType,
-      },
+      values,
       signatureDataUrl: sigPad.toDataUrl(),
     });
-    const pdfPath = `submissions/${classId}/${absenceId}.pdf`;
+    const pdfPath = `submissions/${classId}/${recordId}.pdf`;
     await uploadBytes(ref(storage, pdfPath), pdfBytes, { contentType: "application/pdf" });
 
-    await setDoc(absRef, {
+    await setDoc(recRef, {
+      docType,
       studentId: student.id,
       studentNumber: student.number,
       studentName: student.name,
-      startDate, endDate,
-      dayCount: Number(daysEl.value),
-      absenceType, subtype, reasonDetail, guardianName,
+      startDate, endDate, dayCount,
+      ...recordExtra,
       status: "제출완료",
       pdfPath, photoPath,
       source: "parent",

@@ -28,8 +28,8 @@ function wrapText(text, font, size, maxWidth) {
   return lines;
 }
 
-// fields: template.js에서 저장한 { "text:key": {x,y,size,width,label}, "mark:key:option": {x,y}, sig: {x,y,width,height} }
-// values: { studentName, studentNumber, period, reasonDetail, guardianName, writeDate, gender, absenceType }
+// fields: template.js에서 저장한 { "text:key": {x,y,size,width,label}, "mark:group:option": {x,y}, sig: {x,y,width,height} }
+// values: 각 서류 종류(FIELD_TARGETS_BY_TYPE)의 key와 같은 이름의 값들을 담은 객체
 // signatureDataUrl: 서명 캔버스에서 얻은 PNG data URL (없으면 서명 생략)
 export async function fillTemplate({ templateBytes, fields, values, signatureDataUrl }) {
   const { PDFDocument, rgb } = window.PDFLib;
@@ -41,18 +41,10 @@ export async function fillTemplate({ templateBytes, fields, values, signatureDat
   const page = pdfDoc.getPages()[0];
   const black = rgb(0.05, 0.05, 0.05);
 
-  const textMap = {
-    studentName: values.studentName,
-    studentNumber: values.studentNumber,
-    period: values.period,
-    reasonDetail: values.reasonDetail,
-    guardianName: values.guardianName,
-    writeDate: values.writeDate,
-  };
-
-  for (const [key, val] of Object.entries(textMap)) {
-    const f = fields[`text:${key}`];
-    if (!f || !val) continue;
+  for (const [key, f] of Object.entries(fields)) {
+    if (!key.startsWith("text:")) continue;
+    const val = values[key.slice(5)];
+    if (!val) continue;
     const size = f.size || 11;
     const lines = wrapText(val, font, size, f.width);
     lines.forEach((line, i) => {
@@ -63,7 +55,7 @@ export async function fillTemplate({ templateBytes, fields, values, signatureDat
   for (const [markKey, f] of Object.entries(fields)) {
     if (!markKey.startsWith("mark:")) continue;
     const [, group, option] = markKey.split(":");
-    const selected = group === "gender" ? values.gender : group === "absenceType" ? values.absenceType : null;
+    const selected = values[group];
     if (selected && selected === option) {
       page.drawText("V", { x: f.x, y: f.y, size: 12, font, color: black });
     }
@@ -107,4 +99,11 @@ export const SAMPLE_VALUES = {
   writeDate: "2026년 9월 15일",
   gender: "남",
   absenceType: "질병결석",
+  contact: "010-1234-5678",
+  purpose: "가족 여행",
+  location: "제주도",
+  studyPlan: "제주 자연사박물관 견학 및 생태 체험 (샘플 미리보기)",
+  accompany: "예",
+  contact5day: "예",
+  reportContent: "제주 자연사박물관에서 화산 지형과 생태계를 관찰하고 기록했습니다. (샘플 미리보기)",
 };

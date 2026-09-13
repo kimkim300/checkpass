@@ -10,10 +10,18 @@
 <div id="app-nav"></div>
 <div class="wrap">
   <h1>기간별 서류 수합</h1>
-  <p class="page-sub">기간을 선택해 제출된 결석계를 한 개의 PDF로 합쳐서 교무실에 제출하세요.</p>
+  <p class="page-sub">기간과 서류 종류를 선택해 제출된 서류를 한 개의 PDF로 합쳐서 교무실에 제출하세요.</p>
 
   <div class="card">
     <div class="row">
+      <div class="field"><label>서류 종류</label>
+        <select id="e-doctype">
+          <option value="all">전체</option>
+          <option value="absence">결석계</option>
+          <option value="tripApply">교외체험학습 신청서</option>
+          <option value="tripReport">교외체험학습 보고서</option>
+        </select>
+      </div>
       <div class="field"><label>시작일</label><input type="date" id="e-start" /></div>
       <div class="field"><label>종료일</label><input type="date" id="e-end" /></div>
       <div class="field"><label>정렬 기준</label>

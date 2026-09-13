@@ -1,8 +1,8 @@
 import {
   auth, db, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, collection, addDoc, getDocs, query, where, serverTimestamp,
+  signOut, collection, addDoc, setDoc, doc, getDocs, query, where, serverTimestamp,
 } from "./firebase-init.js";
-import { guardConfig, toast, setCurrentClassId, escapeHtml } from "./utils.js";
+import { guardConfig, toast, setCurrentClassId, escapeHtml, classLookupId } from "./utils.js";
 
 if (!guardConfig()) init();
 
@@ -50,10 +50,14 @@ function init() {
     if (!user) return;
     const name = document.getElementById("class-name").value.trim();
     const grade = document.getElementById("class-grade").value.trim();
-    if (!name) return;
+    const parentCode = document.getElementById("class-parentcode").value.trim();
+    if (!name || !parentCode) return;
     const ref = await addDoc(collection(db, "classes"), {
       name, grade, ownerId: user.uid, ownerEmail: user.email, createdAt: serverTimestamp(),
     });
+    // 학부모가 "학급 이름 + 비밀번호"로 홈 화면에서 바로 들어올 수 있도록 조회용 문서를 만들어둔다.
+    await setDoc(doc(db, "classLookup", classLookupId(name, parentCode)), { classId: ref.id });
+    await setDoc(doc(db, "classes", ref.id, "private", "settings"), { parentCode });
     toast("학급이 생성되었습니다.");
     setCurrentClassId(ref.id);
     location.href = `dashboard.html?class=${ref.id}`;

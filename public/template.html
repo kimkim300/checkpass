@@ -13,13 +13,18 @@
 <body>
 <div id="app-nav"></div>
 <div class="wrap">
-  <h1>결석계 양식 등록</h1>
-  <p class="page-sub">학교 결석계 PDF를 업로드하고, 학부모가 입력할 항목이 들어갈 위치를 한 번만 지정해두세요. 이후 모든 제출에 자동으로 재사용됩니다.</p>
+  <h1>서류 양식 등록</h1>
+  <p class="page-sub">학교 서식 PDF를 업로드하고, 학부모가 입력할 항목이 들어갈 위치를 한 번만 지정해두세요. 이후 모든 제출에 자동으로 재사용됩니다.</p>
+
+  <div class="tabbar" id="doctype-tabbar"></div>
 
   <div class="card">
     <h2>1. 양식 PDF 업로드</h2>
     <div id="current-pdf-name" class="page-sub" style="margin-bottom:8px"></div>
-    <input type="file" id="pdf-upload" accept="application/pdf" />
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+      <input type="file" id="pdf-upload" accept="application/pdf" />
+      <button class="btn btn-danger btn-sm" id="btn-delete-template" style="display:none">이 양식 삭제</button>
+    </div>
   </div>
 
   <div id="designer" style="display:none">

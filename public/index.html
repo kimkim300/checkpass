@@ -8,46 +8,40 @@
 </head>
 <body>
 <div class="wrap narrow">
-  <h1 style="margin-top:40px">📋 결석계 관리</h1>
-  <p class="page-sub">교사용 관리자 번호를 입력하고 학급을 선택하세요.</p>
+  <div style="text-align:center; margin-top:56px; margin-bottom:8px; font-size:40px">📋</div>
+  <h1 style="text-align:center; margin-top:0">결석계 관리</h1>
+  <p class="page-sub" style="text-align:center">학교 서류를 온라인으로 받고 관리하는 서비스입니다.</p>
 
-  <div id="auth-section" class="card">
-    <form id="auth-form">
-      <div class="field">
-        <label>관리자 번호</label>
-        <input type="password" id="auth-pin" required minlength="4" inputmode="numeric" autocomplete="current-password" placeholder="숫자 4자리 이상" />
-        <div class="hint">처음 입력하는 번호면 자동으로 새 관리자 계정이 만들어집니다. 이후에는 같은 번호로 계속 접속하세요. 잊어버리지 않게 따로 적어두세요.</div>
-      </div>
-      <button type="submit" class="btn btn-primary btn-block" id="auth-submit">입장</button>
-    </form>
+  <div class="tabbar" id="role-tabbar" style="margin:0 auto 18px; width:100%; justify-content:center">
+    <button class="active" data-role="teacher" style="flex:1">👩‍🏫 선생님</button>
+    <button data-role="parent" style="flex:1">👨‍👩‍👧 학부모</button>
   </div>
 
-  <div id="class-section" style="display:none">
-    <div class="card">
-      <h2>내 학급</h2>
-      <div id="class-list" class="class-list"></div>
-      <div class="empty" id="class-empty" style="display:none">등록된 학급이 없습니다. 아래에서 학급을 만들어보세요.</div>
-    </div>
-    <div class="card">
-      <h2>새 학급 만들기</h2>
-      <form id="class-form">
-        <div class="row">
-          <div class="field">
-            <label>학급 이름</label>
-            <input type="text" id="class-name" placeholder="예: 3학년 3반" required />
-          </div>
-          <div class="field">
-            <label>학년/반 (양식에 자동 입력)</label>
-            <input type="text" id="class-grade" placeholder="예: 3학년 3반" required />
-          </div>
-        </div>
-        <button type="submit" class="btn btn-secondary btn-block">학급 만들기</button>
-      </form>
-    </div>
-    <button class="btn btn-ghost btn-block" id="btn-logout-2">로그아웃</button>
+  <div id="role-teacher" class="card">
+    <div class="home-icon mint">👩‍🏫</div>
+    <h2 style="margin-bottom:4px">선생님이신가요?</h2>
+    <p class="page-sub">관리자 번호로 입장해서 학급을 관리하세요.</p>
+    <a href="teacher.html" class="btn btn-primary btn-block">관리자 번호로 입장</a>
+  </div>
+
+  <div id="role-parent" class="card" style="display:none">
+    <div class="home-icon yellow">👨‍👩‍👧</div>
+    <h2 style="margin-bottom:4px">학부모이신가요?</h2>
+    <p class="page-sub" style="margin-bottom:16px">학급 이름과 비밀번호를 입력해주세요. 담임 선생님께 받은 링크로 바로 오셨다면 이 단계는 건너뛰어도 됩니다.</p>
+    <form id="parent-form">
+      <div class="field">
+        <label>학급 이름</label>
+        <input type="text" id="p-classname" placeholder="예: 콩자반" required />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" id="p-password" placeholder="담임 선생님께 안내받은 비밀번호" required />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="p-submit">입장</button>
+    </form>
   </div>
 </div>
 
-<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/home.js"></script>
 </body>
 </html>

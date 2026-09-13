@@ -4,3 +4,6 @@
 # OS / 편집기
 .DS_Store
 Thumbs.db
+
+# Firebase CLI 로컬 캐시
+.firebase/

@@ -85,6 +85,17 @@ export function setCurrentClassId(id) {
   localStorage.setItem("currentClassId", id);
 }
 
+// 학부모가 "학급 이름 + 비밀번호"로 입장할 때 쓰는 조회용 문서 ID.
+// 이름과 비밀번호를 둘 다 정확히 알아야 같은 ID를 만들 수 있어서,
+// classLookup 컬렉션을 목록 조회(list) 없이 단건 조회(get)만 허용해도 안전하다.
+function normalizeForLookup(s) {
+  return String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function classLookupId(name, code) {
+  return `${normalizeForLookup(name)}__${normalizeForLookup(code)}`;
+}
+
 export const REASON_TYPES = ["출석인정결석", "질병결석", "기타결석"];
 
 export const REASON_SUBTYPES = {
@@ -98,4 +109,59 @@ export const STATUS_LABEL = {
   "제출완료": { label: "제출완료", cls: "badge-done" },
   "확인완료": { label: "확인완료", cls: "badge-checked" },
   "반려": { label: "반려", cls: "badge-rejected" },
+};
+
+// 지원하는 서류 종류. deadline은 미제출 "기한초과" 판단 기준(실제 서식에 적힌 제출 기한)이다.
+export const DOC_TYPES = [
+  { id: "absence", label: "결석계", pdfFile: "absence.pdf", deadline: { days: 5, from: "startDate" } },
+  { id: "tripApply", label: "교외체험학습 신청서", pdfFile: "tripApply.pdf", deadline: null },
+  { id: "tripReport", label: "교외체험학습 보고서", pdfFile: "tripReport.pdf", deadline: { days: 7, from: "endDate" } },
+];
+
+export function getDocType(id) {
+  return DOC_TYPES.find((d) => d.id === id) || DOC_TYPES[0];
+}
+
+// 결석계 양식 설계 화면(template.js)과 학부모 제출 화면(submit.js)이 공통으로 쓰는
+// "입력란 위치 지정" 대상 목록. type: text(글자) / mark(체크표시) / sig(서명 이미지)
+export const FIELD_TARGETS_BY_TYPE = {
+  absence: [
+    { id: "text:studentName", label: "학생 이름", type: "text", size: 11 },
+    { id: "text:studentNumber", label: "번호", type: "text", size: 11 },
+    { id: "mark:gender:남", label: "성별 - 남", type: "mark" },
+    { id: "mark:gender:여", label: "성별 - 여", type: "mark" },
+    { id: "text:period", label: "결석 기간 문구", type: "text", size: 10, width: 260 },
+    { id: "mark:absenceType:출석인정결석", label: "결석유형 - 출석인정결석", type: "mark" },
+    { id: "mark:absenceType:질병결석", label: "결석유형 - 질병결석", type: "mark" },
+    { id: "mark:absenceType:기타결석", label: "결석유형 - 기타결석", type: "mark" },
+    { id: "text:reasonDetail", label: "결석 사유 (상세)", type: "text", size: 10, width: 420 },
+    { id: "text:guardianName", label: "보호자 성명", type: "text", size: 11 },
+    { id: "text:writeDate", label: "신고일자", type: "text", size: 10 },
+    { id: "sig", label: "서명란 (이미지)", type: "sig", width: 110, height: 45 },
+  ],
+  tripApply: [
+    { id: "text:studentName", label: "학생 이름", type: "text", size: 11 },
+    { id: "text:studentNumber", label: "번호", type: "text", size: 11 },
+    { id: "mark:gender:남", label: "성별 - 남", type: "mark" },
+    { id: "mark:gender:여", label: "성별 - 여", type: "mark" },
+    { id: "text:contact", label: "연락처", type: "text", size: 10 },
+    { id: "text:period", label: "체험학습 기간 문구", type: "text", size: 10, width: 260 },
+    { id: "text:purpose", label: "목적", type: "text", size: 10, width: 420 },
+    { id: "text:location", label: "장소", type: "text", size: 10, width: 420 },
+    { id: "text:studyPlan", label: "학습계획", type: "text", size: 10, width: 420 },
+    { id: "mark:accompany:예", label: "보호자 동행 - 예", type: "mark" },
+    { id: "mark:accompany:아니오", label: "보호자 동행 - 아니오", type: "mark" },
+    { id: "mark:contact5day:예", label: "5일초과 시 연락 - 예", type: "mark" },
+    { id: "mark:contact5day:아니오", label: "5일초과 시 연락 - 아니오", type: "mark" },
+    { id: "text:writeDate", label: "신청일자", type: "text", size: 10 },
+    { id: "sig", label: "서명란 (이미지)", type: "sig", width: 110, height: 45 },
+  ],
+  tripReport: [
+    { id: "text:studentName", label: "학생 이름", type: "text", size: 11 },
+    { id: "text:studentNumber", label: "번호", type: "text", size: 11 },
+    { id: "text:period", label: "체험학습 기간 문구", type: "text", size: 10, width: 260 },
+    { id: "text:reportContent", label: "학습 내용", type: "text", size: 10, width: 460 },
+    { id: "text:writeDate", label: "보고일자", type: "text", size: 10 },
+    { id: "sig", label: "서명란 (이미지)", type: "sig", width: 110, height: 45 },
+  ],
 };

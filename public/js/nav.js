@@ -9,22 +9,22 @@ const TABS = [
 ];
 
 // 로그인 + 학급 선택이 끝난 교사 페이지 공통 헤더.
-// 인증되지 않았거나 선택된 학급이 없으면 index.html 로 되돌려보낸다.
+// 인증되지 않았거나 선택된 학급이 없으면 teacher.html 로 되돌려보낸다.
 export function requireTeacherPage(activeKey) {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        location.href = "index.html";
+        location.href = "teacher.html";
         return;
       }
       const classId = getCurrentClassId();
       if (!classId) {
-        location.href = "index.html";
+        location.href = "teacher.html";
         return;
       }
       const snap = await getDoc(doc(db, "classes", classId));
       if (!snap.exists()) {
-        location.href = "index.html";
+        location.href = "teacher.html";
         return;
       }
       const cls = { id: snap.id, ...snap.data() };
@@ -49,15 +49,16 @@ function renderNav(activeKey, cls) {
           <small>${cls.grade ? cls.grade + " · " : ""}결석계 관리</small>
         </div>
         <div class="tabs">${tabsHtml}</div>
+        <a class="logout-btn" href="index.html">🏠 홈</a>
         <button class="logout-btn" id="nav-switch-class">학급 전환</button>
         <button class="logout-btn" id="nav-logout">로그아웃</button>
       </div>
     </div>`;
   document.getElementById("nav-switch-class").onclick = () => {
-    location.href = "index.html";
+    location.href = "teacher.html";
   };
   document.getElementById("nav-logout").onclick = async () => {
     await signOut(auth);
-    location.href = "index.html";
+    location.href = "teacher.html";
   };
 }

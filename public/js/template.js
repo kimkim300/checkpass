@@ -1,52 +1,68 @@
-import { db, storage, doc, getDoc, setDoc, ref, uploadBytes, getBytes, serverTimestamp } from "./firebase-init.js";
+import { db, storage, doc, getDoc, setDoc, deleteDoc, ref, uploadBytes, getBytes, deleteObject, serverTimestamp } from "./firebase-init.js";
 import { requireTeacherPage } from "./nav.js";
-import { guardConfig, toast } from "./utils.js";
+import { guardConfig, toast, DOC_TYPES, FIELD_TARGETS_BY_TYPE } from "./utils.js";
 import { fillTemplate, SAMPLE_VALUES } from "./pdf-fill.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-const FIELD_TARGETS = [
-  { id: "text:studentName", label: "학생 이름", type: "text", size: 11 },
-  { id: "text:studentNumber", label: "번호", type: "text", size: 11 },
-  { id: "mark:gender:남", label: "성별 - 남", type: "mark" },
-  { id: "mark:gender:여", label: "성별 - 여", type: "mark" },
-  { id: "text:period", label: "결석 기간 문구", type: "text", size: 10, width: 260 },
-  { id: "mark:absenceType:출석인정결석", label: "결석유형 - 출석인정결석", type: "mark" },
-  { id: "mark:absenceType:질병결석", label: "결석유형 - 질병결석", type: "mark" },
-  { id: "mark:absenceType:기타결석", label: "결석유형 - 기타결석", type: "mark" },
-  { id: "text:reasonDetail", label: "결석 사유 (상세)", type: "text", size: 10, width: 420 },
-  { id: "text:guardianName", label: "보호자 성명", type: "text", size: 11 },
-  { id: "text:writeDate", label: "신고일자", type: "text", size: 10 },
-  { id: "sig", label: "서명란 (이미지)", type: "sig", width: 110, height: 45 },
-];
 
 if (!guardConfig()) {
   requireTeacherPage("template").then(({ cls }) => init(cls.id));
 }
 
 async function init(classId) {
-  const metaRef = doc(db, "classes", classId, "meta", "template");
-  let fields = {};
-  let pageWidth = 595, pageHeight = 841;
-  let pdfBytes = null;
-  let scale = 1;
+  let currentType = DOC_TYPES[0].id;
   let armedId = null;
+  // 서류 종류별 상태를 각각 보관해서 탭을 오갈 때 다시 불러오지 않아도 되게 한다.
+  const state = {}; // { [docType]: { fields, pageWidth, pageHeight, pdfBytes, pdfPath, pdfName, loaded } }
 
-  const existing = await getDoc(metaRef);
-  let pdfPath = null, pdfName = null;
-  if (existing.exists()) {
-    const data = existing.data();
-    fields = data.fields || {};
-    pageWidth = data.pageWidth || 595;
-    pageHeight = data.pageHeight || 841;
-    pdfPath = data.pdfPath;
-    pdfName = data.pdfName;
-    document.getElementById("current-pdf-name").textContent = pdfName ? `현재 등록된 양식: ${pdfName}` : "";
-    if (pdfPath) {
+  function getState(type) {
+    if (!state[type]) state[type] = { fields: {}, pageWidth: 595, pageHeight: 841, pdfBytes: null, pdfPath: null, pdfName: null, loaded: false };
+    return state[type];
+  }
+
+  renderTabbar();
+  await selectType(DOC_TYPES[0].id);
+
+  function renderTabbar() {
+    const wrap = document.getElementById("doctype-tabbar");
+    wrap.innerHTML = DOC_TYPES.map((t) => `<button data-type="${t.id}" class="${t.id === currentType ? "active" : ""}">${t.label}</button>`).join("");
+    wrap.querySelectorAll("button").forEach((btn) => {
+      btn.onclick = () => selectType(btn.dataset.type);
+    });
+  }
+
+  async function selectType(type) {
+    currentType = type;
+    armedId = null;
+    renderTabbar();
+    document.getElementById("designer").style.display = "none";
+    document.getElementById("current-pdf-name").textContent = "";
+    document.getElementById("btn-delete-template").style.display = "none";
+    document.getElementById("pdf-upload").value = "";
+
+    const s = getState(type);
+    if (!s.loaded) {
+      const metaRef = doc(db, "classes", classId, "templates", type);
+      const snap = await getDoc(metaRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        s.fields = data.fields || {};
+        s.pageWidth = data.pageWidth || 595;
+        s.pageHeight = data.pageHeight || 841;
+        s.pdfPath = data.pdfPath;
+        s.pdfName = data.pdfName;
+      }
+      s.loaded = true;
+    }
+
+    if (s.pdfPath) {
+      document.getElementById("current-pdf-name").textContent = `현재 등록된 양식: ${s.pdfName || ""}`;
+      document.getElementById("btn-delete-template").style.display = "inline-flex";
       try {
-        pdfBytes = await getBytes(ref(storage, pdfPath));
-        await renderPdf(pdfBytes);
+        if (!s.pdfBytes) s.pdfBytes = await getBytes(ref(storage, s.pdfPath));
+        await renderPdf(s);
       } catch (e) {
+        console.error(e);
         toast("기존 양식 파일을 불러오지 못했습니다. 다시 업로드해주세요.", true);
       }
     }
@@ -55,23 +71,45 @@ async function init(classId) {
   document.getElementById("pdf-upload").addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    pdfBytes = new Uint8Array(await file.arrayBuffer());
-    pdfPath = `templates/${classId}/template.pdf`;
-    pdfName = file.name;
-    document.getElementById("current-pdf-name").textContent = `업로드됨: ${pdfName} (저장을 눌러야 반영됩니다)`;
-    await renderPdf(pdfBytes);
+    const s = getState(currentType);
+    s.pdfBytes = new Uint8Array(await file.arrayBuffer());
+    const typeInfo = DOC_TYPES.find((t) => t.id === currentType);
+    s.pdfPath = `templates/${classId}/${typeInfo.pdfFile}`;
+    s.pdfName = file.name;
+    document.getElementById("current-pdf-name").textContent = `업로드됨: ${s.pdfName} (저장을 눌러야 반영됩니다)`;
+    document.getElementById("btn-delete-template").style.display = "inline-flex";
+    await renderPdf(s);
     toast("양식을 불러왔습니다. 항목 배치 후 저장하세요.");
   });
 
-  async function renderPdf(bytes) {
-    const loadingTask = pdfjsLib.getDocument({ data: bytes.slice() });
+  document.getElementById("btn-delete-template").addEventListener("click", async () => {
+    const s = getState(currentType);
+    if (!s.pdfPath) return;
+    if (!confirm("이 양식과 배치된 입력란 위치가 모두 삭제됩니다. 계속할까요?")) return;
+    try {
+      await deleteObject(ref(storage, s.pdfPath));
+    } catch (e) {
+      console.warn("스토리지 파일 삭제 실패(이미 없을 수 있음):", e);
+    }
+    await deleteDoc(doc(db, "classes", classId, "templates", currentType));
+    state[currentType] = { fields: {}, pageWidth: 595, pageHeight: 841, pdfBytes: null, pdfPath: null, pdfName: null, loaded: true };
+    document.getElementById("designer").style.display = "none";
+    document.getElementById("current-pdf-name").textContent = "";
+    document.getElementById("btn-delete-template").style.display = "none";
+    toast("양식이 삭제되었습니다.");
+  });
+
+  let scale = 1;
+
+  async function renderPdf(s) {
+    const loadingTask = pdfjsLib.getDocument({ data: s.pdfBytes.slice() });
     const pdf = await loadingTask.promise;
     const page = await pdf.getPage(1);
     const native = page.getViewport({ scale: 1 });
-    pageWidth = native.width;
-    pageHeight = native.height;
+    s.pageWidth = native.width;
+    s.pageHeight = native.height;
     const displayWidth = Math.min(720, document.getElementById("canvas-wrap").clientWidth || 720);
-    scale = displayWidth / pageWidth;
+    scale = displayWidth / s.pageWidth;
     const viewport = page.getViewport({ scale });
     const canvas = document.getElementById("pdf-canvas");
     canvas.width = viewport.width;
@@ -87,11 +125,16 @@ async function init(classId) {
     renderMarkers();
   }
 
+  function fieldTargets() {
+    return FIELD_TARGETS_BY_TYPE[currentType];
+  }
+
   function renderFieldList() {
+    const s = getState(currentType);
     const wrap = document.getElementById("field-list");
     wrap.innerHTML = "";
-    for (const target of FIELD_TARGETS) {
-      const placed = fields[target.id];
+    for (const target of fieldTargets()) {
+      const placed = s.fields[target.id];
       const row = document.createElement("div");
       row.className = "field-list-item" + (placed ? " placed" : "") + (armedId === target.id ? " armed" : "");
       let tuneHtml = "";
@@ -116,7 +159,7 @@ async function init(classId) {
       row.querySelectorAll("[data-tune]").forEach((inp) => {
         inp.addEventListener("click", (e) => e.stopPropagation());
         inp.addEventListener("input", () => {
-          const f = fields[target.id];
+          const f = s.fields[target.id];
           f[inp.dataset.tune] = Number(inp.value);
           renderMarkers();
         });
@@ -125,38 +168,40 @@ async function init(classId) {
     }
   }
 
-  function nextUnplacedTarget() {
-    return FIELD_TARGETS.find((t) => !fields[t.id]);
+  function nextUnplacedTarget(s) {
+    return fieldTargets().find((t) => !s.fields[t.id]);
   }
 
   document.getElementById("pdf-canvas").addEventListener("click", (e) => {
     if (!armedId) return;
-    const target = FIELD_TARGETS.find((t) => t.id === armedId);
+    const s = getState(currentType);
+    const target = fieldTargets().find((t) => t.id === armedId);
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
     const pdfX = clickX / scale;
-    const pdfYTop = pageHeight - clickY / scale;
+    const pdfYTop = s.pageHeight - clickY / scale;
 
     if (target.type === "sig") {
       const w = target.width, h = target.height;
-      fields[target.id] = { x: pdfX, y: pdfYTop - h, width: w, height: h, label: target.label };
+      s.fields[target.id] = { x: pdfX, y: pdfYTop - h, width: w, height: h, label: target.label };
     } else if (target.type === "text") {
-      fields[target.id] = { x: pdfX, y: pdfYTop, size: target.size, width: target.width || null, label: target.label };
+      s.fields[target.id] = { x: pdfX, y: pdfYTop, size: target.size, width: target.width || null, label: target.label };
     } else {
-      fields[target.id] = { x: pdfX, y: pdfYTop, label: target.label };
+      s.fields[target.id] = { x: pdfX, y: pdfYTop, label: target.label };
     }
-    const next = nextUnplacedTarget();
+    const next = nextUnplacedTarget(s);
     armedId = next ? next.id : null;
     renderFieldList();
     renderMarkers();
   });
 
   function renderMarkers() {
+    const s = getState(currentType);
     const layer = document.getElementById("marker-layer");
     layer.innerHTML = "";
-    for (const target of FIELD_TARGETS) {
-      const f = fields[target.id];
+    for (const target of fieldTargets()) {
+      const f = s.fields[target.id];
       if (!f) continue;
       const el = document.createElement("div");
       el.style.pointerEvents = "auto";
@@ -164,22 +209,22 @@ async function init(classId) {
         el.className = "field-marker sig-marker";
         el.style.position = "absolute";
         el.style.left = f.x * scale + "px";
-        el.style.top = (pageHeight - f.y - f.height) * scale + "px";
+        el.style.top = (s.pageHeight - f.y - f.height) * scale + "px";
         el.style.width = f.width * scale + "px";
         el.style.height = f.height * scale + "px";
         el.innerHTML = `<span class="tag">${target.label}</span>`;
       } else {
         el.className = "field-marker";
         el.style.left = f.x * scale + "px";
-        el.style.top = (pageHeight - f.y) * scale + "px";
+        el.style.top = (s.pageHeight - f.y) * scale + "px";
         el.innerHTML = `<span class="tag">${target.label}</span>`;
       }
-      makeDraggable(el, target, f);
+      makeDraggable(el, f);
       layer.appendChild(el);
     }
   }
 
-  function makeDraggable(el, target, f) {
+  function makeDraggable(el, f) {
     el.addEventListener("mousedown", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -203,10 +248,11 @@ async function init(classId) {
   }
 
   document.getElementById("btn-preview").addEventListener("click", async () => {
-    if (!pdfBytes) return toast("먼저 양식 PDF를 업로드하세요.", true);
+    const s = getState(currentType);
+    if (!s.pdfBytes) return toast("먼저 양식 PDF를 업로드하세요.", true);
     try {
       const sampleSig = makeSampleSignatureDataUrl();
-      const bytes = await fillTemplate({ templateBytes: pdfBytes, fields, values: SAMPLE_VALUES, signatureDataUrl: sampleSig });
+      const bytes = await fillTemplate({ templateBytes: s.pdfBytes, fields: s.fields, values: SAMPLE_VALUES, signatureDataUrl: sampleSig });
       const blob = new Blob([bytes], { type: "application/pdf" });
       window.open(URL.createObjectURL(blob), "_blank");
     } catch (err) {
@@ -216,14 +262,15 @@ async function init(classId) {
   });
 
   document.getElementById("btn-save").addEventListener("click", async () => {
-    if (!pdfPath) {
-      pdfPath = `templates/${classId}/template.pdf`;
+    const s = getState(currentType);
+    const typeInfo = DOC_TYPES.find((t) => t.id === currentType);
+    if (!s.pdfPath) s.pdfPath = `templates/${classId}/${typeInfo.pdfFile}`;
+    if (s.pdfBytes) {
+      await uploadBytes(ref(storage, s.pdfPath), s.pdfBytes, { contentType: "application/pdf" });
     }
-    if (pdfBytes) {
-      await uploadBytes(ref(storage, pdfPath), pdfBytes, { contentType: "application/pdf" });
-    }
-    await setDoc(metaRef, {
-      pdfPath, pdfName: pdfName || "결석계 양식.pdf", pageWidth, pageHeight, fields, updatedAt: serverTimestamp(),
+    await setDoc(doc(db, "classes", classId, "templates", currentType), {
+      pdfPath: s.pdfPath, pdfName: s.pdfName || `${typeInfo.label}.pdf`,
+      pageWidth: s.pageWidth, pageHeight: s.pageHeight, fields: s.fields, updatedAt: serverTimestamp(),
     });
     toast("양식이 저장되었습니다.");
   });

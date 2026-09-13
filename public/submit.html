@@ -3,79 +3,99 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>결석계 제출</title>
+<title>서류 제출</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 <div class="wrap narrow">
   <div id="header-area" style="padding-top:24px">
-    <h1 id="class-title">결석계 제출</h1>
-    <p class="page-sub">학생 정보와 결석 사유를 입력하고 서명해주세요.</p>
+    <p><a href="index.html" style="color:var(--sub); font-size:13px; text-decoration:none">← 홈으로</a></p>
+    <h1 id="class-title">서류 제출</h1>
+    <p class="page-sub">제출할 서류를 선택하고 내용을 입력해주세요.</p>
   </div>
 
   <div id="loading" class="loading-block">불러오는 중...</div>
 
   <form id="submit-form" class="card" style="display:none">
     <div class="field">
+      <label>제출할 서류 *</label>
+      <select id="f-doctype" required></select>
+    </div>
+    <div class="field">
       <label>학생 선택 *</label>
       <select id="f-student" required></select>
     </div>
-    <div class="row">
+
+    <div id="section-absence" class="doctype-section">
+      <div class="row">
+        <div class="field"><label>결석 시작일 *</label><input type="date" class="f-start" /></div>
+        <div class="field"><label>결석 종료일 *</label><input type="date" class="f-end" /></div>
+      </div>
+      <div class="field"><label>일수 (주말 제외 자동 계산, 필요 시 수정) *</label><input type="number" class="f-days" min="0" /></div>
       <div class="field">
-        <label>결석 시작일 *</label>
-        <input type="date" id="f-start" required />
+        <label>결석 유형 *</label>
+        <select id="f-absenceType">
+          <option value="">선택하세요</option>
+          <option value="출석인정결석">출석인정결석</option>
+          <option value="질병결석">질병결석</option>
+          <option value="기타결석">기타결석</option>
+        </select>
+      </div>
+      <div class="field" id="subtype-field" style="display:none">
+        <label>세부 사유</label>
+        <select id="f-subtype"></select>
+      </div>
+      <div class="field"><label>결석 사유 상세 *</label><textarea id="f-reasonDetail" placeholder="예: 감기 몸살로 인한 통원 치료"></textarea></div>
+      <div class="field"><label>보호자 성명 *</label><input type="text" id="f-guardianName" /></div>
+      <div class="field"><label>증빙서류 사진 (선택, 진단서·처방전 등)</label><input type="file" id="f-photo" accept="image/*" capture="environment" /></div>
+    </div>
+
+    <div id="section-tripApply" class="doctype-section">
+      <div class="field"><label>연락처 *</label><input type="text" id="f-contact" placeholder="010-0000-0000" /></div>
+      <div class="row">
+        <div class="field"><label>체험학습 시작일 *</label><input type="date" class="f-start" /></div>
+        <div class="field"><label>체험학습 종료일 *</label><input type="date" class="f-end" /></div>
+      </div>
+      <div class="field"><label>일수 (주말 제외 자동 계산, 필요 시 수정) *</label><input type="number" class="f-days" min="0" /></div>
+      <div class="field"><label>목적 *</label><input type="text" id="f-purpose" placeholder="예: 가족 여행" /></div>
+      <div class="field"><label>장소 *</label><input type="text" id="f-location" placeholder="예: 제주도" /></div>
+      <div class="field"><label>학습계획 *</label><textarea id="f-studyPlan" placeholder="체험학습 중 어떤 학습을 할 계획인지 적어주세요"></textarea></div>
+      <div class="field">
+        <label>보호자(친권자·후견인) 동행 여부 *</label>
+        <select id="f-accompany"><option value="">선택하세요</option><option value="예">예</option><option value="아니오">아니오</option></select>
       </div>
       <div class="field">
-        <label>결석 종료일 *</label>
-        <input type="date" id="f-end" required />
+        <label>연속 5일 초과 시, 학생이 담임교사에게 연락하겠습니까? *</label>
+        <select id="f-contact5day"><option value="">선택하세요</option><option value="예">예</option><option value="아니오">아니오</option></select>
       </div>
     </div>
-    <div class="field">
-      <label>일수 (주말 제외 자동 계산, 필요 시 수정) *</label>
-      <input type="number" id="f-days" min="0" required />
+
+    <div id="section-tripReport" class="doctype-section">
+      <div class="row">
+        <div class="field"><label>체험학습 시작일 *</label><input type="date" class="f-start" /></div>
+        <div class="field"><label>체험학습 종료일 *</label><input type="date" class="f-end" /></div>
+      </div>
+      <div class="field"><label>일수 (주말 제외 자동 계산, 필요 시 수정) *</label><input type="number" class="f-days" min="0" /></div>
+      <div class="field"><label>학습 내용 *</label><textarea id="f-reportContent" rows="8" placeholder="교외체험학습 중 어떤 교육활동을 했는지 구체적으로 적어주세요"></textarea></div>
     </div>
-    <div class="field">
-      <label>결석 유형 *</label>
-      <select id="f-type" required>
-        <option value="">선택하세요</option>
-        <option value="출석인정결석">출석인정결석</option>
-        <option value="질병결석">질병결석</option>
-        <option value="기타결석">기타결석</option>
-      </select>
-    </div>
-    <div class="field" id="subtype-field" style="display:none">
-      <label>세부 사유</label>
-      <select id="f-subtype"></select>
-    </div>
-    <div class="field">
-      <label>결석 사유 상세 *</label>
-      <textarea id="f-reason" required placeholder="예: 감기 몸살로 인한 통원 치료"></textarea>
-    </div>
-    <div class="field">
-      <label>보호자 성명 *</label>
-      <input type="text" id="f-guardian" required />
-    </div>
-    <div class="field">
-      <label>증빙서류 사진 (선택, 진단서·처방전 등)</label>
-      <input type="file" id="f-photo" accept="image/*" capture="environment" />
-    </div>
+
     <div class="field">
       <label>보호자 서명 *</label>
       <div class="sig-pad-wrap"><canvas id="sig-canvas"></canvas></div>
       <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-sig" style="margin-top:8px">서명 지우기</button>
     </div>
-    <button type="submit" class="btn btn-primary btn-block" id="btn-submit" style="margin-top:8px">결석계 제출하기</button>
+    <button type="submit" class="btn btn-primary btn-block" id="btn-submit" style="margin-top:8px">제출하기</button>
   </form>
 
   <div id="done-screen" class="card" style="display:none; text-align:center">
     <div style="font-size:40px; margin-bottom:8px">✅</div>
     <h2>제출이 완료되었습니다</h2>
-    <p class="page-sub">담임 선생님께 결석계가 전달되었습니다.</p>
-    <a class="btn btn-secondary" id="download-link" download="결석계.pdf" href="#">제출한 결석계 PDF 확인</a>
+    <p class="page-sub">담임 선생님께 서류가 전달되었습니다.</p>
+    <a class="btn btn-secondary" id="download-link" download="제출서류.pdf" href="#">제출한 서류 PDF 확인</a>
   </div>
 
   <div id="error-screen" class="card" style="display:none">
-    <p>이 링크가 유효하지 않거나, 담임 선생님이 아직 결석계 양식을 등록하지 않았습니다.</p>
+    <p>이 링크가 유효하지 않거나, 담임 선생님이 아직 서류 양식을 등록하지 않았습니다.</p>
   </div>
 </div>
 
