@@ -11,6 +11,25 @@ import { fillTemplate } from "./pdf-fill.js";
 
 if (!guardConfig()) init();
 
+const INFO_MODAL_CONTENT = `
+  <h3 style="margin-top:0; font-size:15px">진급 기준</h3>
+  <p style="margin:8px 0"><strong>연간 127일 이상</strong> 출석 필요</p>
+
+  <h3 style="font-size:15px">제출 기한</h3>
+  <p style="margin:8px 0">결석계는 <strong>결석 시작일로부터 5일 이내</strong>에 담임교사에게 제출해주세요.</p>
+
+  <h3 style="font-size:15px">서류 종류별 요구서류</h3>
+  <div style="margin:8px 0; padding:8px; background:#f5f5f5; border-radius:8px; font-size:13px">
+    <p style="margin:4px 0"><strong>질병결석 1~2일:</strong> 학부모 의견서, 처방전, 약봉투, 담임교사 확인서 등</p>
+    <p style="margin:4px 0"><strong>질병결석 3일 이상:</strong> 의사 진단서, 소견서, 진료 확인서 등 (병명과 진료기간 기재 필수)</p>
+    <p style="margin:4px 0"><strong>출석인정결석:</strong> 유형별 증빙서류 필요 (경조사, 감염병, 학생선수 등)</p>
+  </div>
+
+  <p style="margin:8px 0; font-size:13px; color:#666">
+    자세한 사항은 담임 선생님께 문의해주세요.
+  </p>
+`;
+
 async function init() {
   const classId = getParam("class");
   if (!classId) return showError();
@@ -40,6 +59,8 @@ async function init() {
   document.getElementById("class-title").textContent = `${cls.name} 서류 제출`;
   document.getElementById("loading").style.display = "none";
   document.getElementById("submit-form").style.display = "block";
+
+  setupInfoModal();
 
   const studentSel = document.getElementById("f-student");
   studentSel.innerHTML = students.map((s) => `<option value="${s.id}">${escapeHtml(s.number)}번 ${escapeHtml(s.name)}</option>`).join("");
@@ -77,6 +98,8 @@ async function init() {
   const typeSel = document.getElementById("f-absenceType");
   const subtypeField = document.getElementById("subtype-field");
   const subtypeSel = document.getElementById("f-subtype");
+  const docGuideEl = document.getElementById("absence-doc-guide");
+
   typeSel.addEventListener("change", () => {
     const subs = REASON_SUBTYPES[typeSel.value] || [];
     if (subs.length) {
@@ -85,7 +108,19 @@ async function init() {
     } else {
       subtypeField.style.display = "none";
     }
+    updateDocGuide();
   });
+
+  subtypeSel.addEventListener("change", updateDocGuide);
+
+  function updateDocGuide() {
+    if (typeSel.value === "질병결석" && subtypeSel.value === "3일 이상") {
+      docGuideEl.innerHTML = "<strong>필요 서류:</strong> 의사 진단서, 소견서, 진료 확인서 등 병명과 진료기간이 기록된 서류";
+      docGuideEl.style.display = "block";
+    } else {
+      docGuideEl.style.display = "none";
+    }
+  }
 
   function activeSectionEl(type) {
     const map = { absence: "section-absence", tripApply: "section-tripApply", tripReport: "section-tripReport" };
@@ -223,4 +258,27 @@ async function init() {
 function showError() {
   document.getElementById("loading").style.display = "none";
   document.getElementById("error-screen").style.display = "block";
+}
+
+function setupInfoModal() {
+  const overlay = document.getElementById("info-modal-overlay");
+  const closeBtn = document.getElementById("close-info-modal");
+  const showBtn = document.getElementById("btn-show-info");
+  const body = document.getElementById("info-modal-body");
+
+  body.innerHTML = INFO_MODAL_CONTENT;
+
+  showBtn.onclick = (e) => {
+    e.preventDefault();
+    overlay.style.display = "flex";
+  };
+
+  closeBtn.onclick = (e) => {
+    e.preventDefault();
+    overlay.style.display = "none";
+  };
+
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.style.display = "none";
+  };
 }

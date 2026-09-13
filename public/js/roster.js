@@ -8,13 +8,20 @@ if (!guardConfig()) {
 
 async function init(classId) {
   const studentsCol = collection(db, "classes", classId, "students");
+  const recordsCol = collection(db, "classes", classId, "records");
   let students = [];
+  let records = [];
 
   async function refresh() {
     const snap = await getDocs(studentsCol);
     students = [];
     snap.forEach((d) => students.push({ id: d.id, ...d.data() }));
     students.sort((a, b) => (Number(a.number) || 0) - (Number(b.number) || 0));
+
+    const recSnap = await getDocs(recordsCol);
+    records = [];
+    recSnap.forEach((d) => records.push({ id: d.id, ...d.data() }));
+
     render();
   }
 
@@ -24,11 +31,24 @@ async function init(classId) {
     document.getElementById("student-count").textContent = students.length;
     document.getElementById("student-empty").style.display = students.length ? "none" : "block";
     for (const s of students) {
+      let absenceDays = 0;
+      let tripDays = 0;
+      for (const r of records) {
+        if (r.studentId !== s.id) continue;
+        const dayCount = Number(r.dayCount || 0);
+        if (r.docType === "absence") {
+          absenceDays += dayCount;
+        } else if (r.docType === "tripApply" || r.docType === "tripReport") {
+          tripDays += dayCount;
+        }
+      }
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${escapeHtml(s.number ?? "")}</td>
         <td>${escapeHtml(s.name ?? "")}</td>
         <td>${escapeHtml(s.gender ?? "")}</td>
+        <td style="text-align:center"><strong>${absenceDays}</strong>일</td>
+        <td style="text-align:center"><strong>${tripDays}</strong>일</td>
         <td><button class="btn btn-ghost btn-sm" data-del="${s.id}">삭제</button></td>`;
       tbody.appendChild(tr);
     }

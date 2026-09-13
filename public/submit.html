@@ -20,11 +20,23 @@
 
   <div id="loading" class="loading-block">불러오는 중...</div>
 
+  <div id="info-modal-overlay" class="modal-overlay" style="display:none">
+    <div class="modal-content card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+        <h2>📋 출결 규정 안내</h2>
+        <button type="button" class="btn btn-ghost btn-sm" id="close-info-modal">닫기</button>
+      </div>
+      <div id="info-modal-body" style="max-height:300px; overflow-y:auto; font-size:14px; line-height:1.6">
+      </div>
+    </div>
+  </div>
+
   <form id="submit-form" class="card" style="display:none">
     <div class="field">
       <label>제출할 서류 선택 *</label>
       <div class="doctype-picker" id="doctype-picker"></div>
       <select id="f-doctype" required style="display:none"></select>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-show-info" style="margin-top:8px">📋 안내 보기</button>
     </div>
     <div class="field">
       <label>학생 선택 *</label>
@@ -52,6 +64,7 @@
       </div>
       <div class="field"><label>결석 사유 상세 *</label><textarea id="f-reasonDetail" placeholder="예: 감기 몸살로 인한 통원 치료"></textarea></div>
       <div class="field"><label>보호자 성명 *</label><input type="text" id="f-guardianName" /></div>
+      <div id="absence-doc-guide" class="notice info" style="display:none; margin-bottom:12px"></div>
       <div class="field"><label>증빙서류 사진 (선택, 진단서·처방전 등)</label><input type="file" id="f-photo" accept="image/*" capture="environment" /></div>
     </div>
 
