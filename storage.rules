@@ -1,0 +1,29 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // 결석계 빈 양식: 학부모 브라우저가 채워 넣기 위해 내려받아야 하므로 읽기는 공개, 업로드는 교사만.
+    match /templates/{classId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+                      request.resource.size < 20 * 1024 * 1024 &&
+                      request.resource.contentType == 'application/pdf';
+    }
+
+    // 완성된 결석계 PDF: 학부모가 업로드(로그인 없음), 교사만 열람/삭제.
+    match /submissions/{classId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.resource.size < 20 * 1024 * 1024 &&
+                      request.resource.contentType == 'application/pdf';
+      allow delete: if request.auth != null;
+    }
+
+    // 증빙서류 사진 첨부: 학부모가 업로드, 교사만 열람/삭제.
+    match /photos/{classId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.resource.size < 10 * 1024 * 1024 &&
+                      request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null;
+    }
+  }
+}

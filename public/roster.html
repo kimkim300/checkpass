@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>학생 명단 - 결석계 관리</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app-nav"></div>
+<div class="wrap">
+  <h1>학생 명단</h1>
+  <p class="page-sub">학급 학생 명단을 등록해두면 학부모 결석계 작성과 대시보드에서 바로 사용됩니다.</p>
+
+  <div class="card">
+    <h2>학생 추가</h2>
+    <form id="add-form" class="row" style="align-items:flex-end">
+      <div class="field" style="max-width:100px">
+        <label>번호</label>
+        <input type="number" id="add-number" min="1" required />
+      </div>
+      <div class="field">
+        <label>이름</label>
+        <input type="text" id="add-name" required />
+      </div>
+      <div class="field" style="max-width:100px">
+        <label>성별</label>
+        <select id="add-gender">
+          <option value="남">남</option>
+          <option value="여">여</option>
+        </select>
+      </div>
+      <div class="field" style="flex:0">
+        <button class="btn btn-primary" type="submit">추가</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>일괄 등록</h2>
+    <p class="page-sub" style="margin-bottom:8px">한 줄에 한 명씩, "번호 이름" 형식으로 붙여넣으세요. (번호 생략 시 순서대로 자동 부여)</p>
+    <textarea id="bulk-text" rows="5" placeholder="1 김민준&#10;2 이서연&#10;3 박도윤"></textarea>
+    <button class="btn btn-secondary" id="bulk-add-btn" style="margin-top:10px">일괄 추가</button>
+  </div>
+
+  <div class="card">
+    <h2>학생 목록 (<span id="student-count">0</span>명)</h2>
+    <div class="roster-table-wrap">
+      <table id="student-table">
+        <thead><tr><th style="width:60px">번호</th><th>이름</th><th style="width:60px">성별</th><th style="width:80px"></th></tr></thead>
+        <tbody id="student-tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="student-empty" style="display:none">등록된 학생이 없습니다.</div>
+  </div>
+</div>
+
+<script type="module" src="js/roster.js"></script>
+</body>
+</html>

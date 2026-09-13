@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>결석계 양식 - 결석계 관리</title>
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  .tpl-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 800px) { .tpl-layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="app-nav"></div>
+<div class="wrap">
+  <h1>결석계 양식 등록</h1>
+  <p class="page-sub">학교 결석계 PDF를 업로드하고, 학부모가 입력할 항목이 들어갈 위치를 한 번만 지정해두세요. 이후 모든 제출에 자동으로 재사용됩니다.</p>
+
+  <div class="card">
+    <h2>1. 양식 PDF 업로드</h2>
+    <div id="current-pdf-name" class="page-sub" style="margin-bottom:8px"></div>
+    <input type="file" id="pdf-upload" accept="application/pdf" />
+  </div>
+
+  <div id="designer" style="display:none">
+    <div class="notice info">왼쪽 목록에서 항목을 클릭한 뒤(파란 배경으로 표시됨) 오른쪽 양식에서 해당 위치를 클릭하세요. 이미 배치된 항목은 마커를 드래그해서 위치를 미세 조정할 수 있습니다.</div>
+    <div class="tpl-layout">
+      <div class="card" style="position:sticky; top:76px">
+        <h2>2. 입력 항목 배치</h2>
+        <div id="field-list"></div>
+      </div>
+      <div class="card">
+        <h2>3. 양식 미리보기 / 배치</h2>
+        <div class="template-canvas-wrap" id="canvas-wrap">
+          <canvas id="pdf-canvas"></canvas>
+          <div id="marker-layer" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="display:flex; gap:10px; flex-wrap:wrap">
+      <button class="btn btn-secondary" id="btn-preview">샘플 값으로 미리보기</button>
+      <button class="btn btn-primary" id="btn-save">양식 저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+<script type="module" src="js/template.js"></script>
+</body>
+</html>

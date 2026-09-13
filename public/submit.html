@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>결석계 제출</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="wrap narrow">
+  <div id="header-area" style="padding-top:24px">
+    <h1 id="class-title">결석계 제출</h1>
+    <p class="page-sub">학생 정보와 결석 사유를 입력하고 서명해주세요.</p>
+  </div>
+
+  <div id="loading" class="loading-block">불러오는 중...</div>
+
+  <form id="submit-form" class="card" style="display:none">
+    <div class="field">
+      <label>학생 선택 *</label>
+      <select id="f-student" required></select>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>결석 시작일 *</label>
+        <input type="date" id="f-start" required />
+      </div>
+      <div class="field">
+        <label>결석 종료일 *</label>
+        <input type="date" id="f-end" required />
+      </div>
+    </div>
+    <div class="field">
+      <label>일수 (주말 제외 자동 계산, 필요 시 수정) *</label>
+      <input type="number" id="f-days" min="0" required />
+    </div>
+    <div class="field">
+      <label>결석 유형 *</label>
+      <select id="f-type" required>
+        <option value="">선택하세요</option>
+        <option value="출석인정결석">출석인정결석</option>
+        <option value="질병결석">질병결석</option>
+        <option value="기타결석">기타결석</option>
+      </select>
+    </div>
+    <div class="field" id="subtype-field" style="display:none">
+      <label>세부 사유</label>
+      <select id="f-subtype"></select>
+    </div>
+    <div class="field">
+      <label>결석 사유 상세 *</label>
+      <textarea id="f-reason" required placeholder="예: 감기 몸살로 인한 통원 치료"></textarea>
+    </div>
+    <div class="field">
+      <label>보호자 성명 *</label>
+      <input type="text" id="f-guardian" required />
+    </div>
+    <div class="field">
+      <label>증빙서류 사진 (선택, 진단서·처방전 등)</label>
+      <input type="file" id="f-photo" accept="image/*" capture="environment" />
+    </div>
+    <div class="field">
+      <label>보호자 서명 *</label>
+      <div class="sig-pad-wrap"><canvas id="sig-canvas"></canvas></div>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-sig" style="margin-top:8px">서명 지우기</button>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block" id="btn-submit" style="margin-top:8px">결석계 제출하기</button>
+  </form>
+
+  <div id="done-screen" class="card" style="display:none; text-align:center">
+    <div style="font-size:40px; margin-bottom:8px">✅</div>
+    <h2>제출이 완료되었습니다</h2>
+    <p class="page-sub">담임 선생님께 결석계가 전달되었습니다.</p>
+    <a class="btn btn-secondary" id="download-link" download="결석계.pdf" href="#">제출한 결석계 PDF 확인</a>
+  </div>
+
+  <div id="error-screen" class="card" style="display:none">
+    <p>이 링크가 유효하지 않거나, 담임 선생님이 아직 결석계 양식을 등록하지 않았습니다.</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+<script type="module" src="js/submit.js"></script>
+</body>
+</html>

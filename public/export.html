@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>서류 수합 - 결석계 관리</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app-nav"></div>
+<div class="wrap">
+  <h1>기간별 서류 수합</h1>
+  <p class="page-sub">기간을 선택해 제출된 결석계를 한 개의 PDF로 합쳐서 교무실에 제출하세요.</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>시작일</label><input type="date" id="e-start" /></div>
+      <div class="field"><label>종료일</label><input type="date" id="e-end" /></div>
+      <div class="field"><label>정렬 기준</label>
+        <select id="e-sort">
+          <option value="student">학생순</option>
+          <option value="date">날짜순</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="e-search">조회</button>
+  </div>
+
+  <div class="card">
+    <h2>조회 결과 (<span id="result-count">0</span>건)</h2>
+    <div id="result-list"></div>
+    <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap">
+      <button class="btn btn-secondary" id="e-merge" disabled>PDF로 합쳐서 다운로드</button>
+      <button class="btn btn-danger" id="e-cleanup" disabled>제출 완료 후 파일 정리(삭제)</button>
+    </div>
+    <p class="hint" style="margin-top:8px">"정리"를 누르면 서명·첨부사진이 담긴 원본 파일이 서버에서 삭제됩니다. 교무실 제출 후에만 눌러주세요.</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script type="module" src="js/export.js"></script>
+</body>
+</html>

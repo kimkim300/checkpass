@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>대시보드 - 결석계 관리</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app-nav"></div>
+<div class="wrap">
+  <h1>교사 대시보드</h1>
+  <p class="page-sub">학부모에게 보낼 제출 링크: <code id="submit-link"></code> <button class="btn btn-ghost btn-sm" id="copy-link">복사</button></p>
+
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <div class="tabbar" id="view-tabbar">
+    <button class="active" data-view="date">날짜별 보기</button>
+    <button data-view="student">학생별 보기</button>
+    <button data-view="pending">미제출자</button>
+  </div>
+
+  <div id="view-date">
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px">
+        <button class="btn btn-ghost btn-sm" id="cal-prev">← 이전 달</button>
+        <h2 id="cal-title" style="margin:0"></h2>
+        <button class="btn btn-ghost btn-sm" id="cal-next">다음 달 →</button>
+      </div>
+      <div class="calendar" id="calendar"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between">
+        <h2 id="selected-date-title">날짜를 선택하세요</h2>
+        <button class="btn btn-secondary btn-sm" id="btn-add-manual">+ 결석 기록 추가</button>
+      </div>
+      <div id="manual-form-area"></div>
+      <div id="date-absence-list"></div>
+    </div>
+  </div>
+
+  <div id="view-student" style="display:none">
+    <div class="card">
+      <div class="roster-table-wrap">
+        <table>
+          <thead><tr><th>번호</th><th>이름</th><th>총 결석</th><th>미제출</th><th>최근 상태</th></tr></thead>
+          <tbody id="student-summary-tbody"></tbody>
+        </table>
+      </div>
+      <div id="student-detail-area"></div>
+    </div>
+  </div>
+
+  <div id="view-pending" style="display:none">
+    <div class="card">
+      <h2>서류 미제출 학생</h2>
+      <p class="page-sub">결석 시작일로부터 5일이 지나도 서류가 없으면 기한초과로 표시됩니다.</p>
+      <div id="pending-list"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

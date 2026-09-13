@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>결석계 관리</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="wrap narrow">
+  <h1 style="margin-top:40px">📋 결석계 관리</h1>
+  <p class="page-sub">교사용 관리자 번호를 입력하고 학급을 선택하세요.</p>
+
+  <div id="auth-section" class="card">
+    <form id="auth-form">
+      <div class="field">
+        <label>관리자 번호</label>
+        <input type="password" id="auth-pin" required minlength="4" inputmode="numeric" autocomplete="current-password" placeholder="숫자 4자리 이상" />
+        <div class="hint">처음 입력하는 번호면 자동으로 새 관리자 계정이 만들어집니다. 이후에는 같은 번호로 계속 접속하세요. 잊어버리지 않게 따로 적어두세요.</div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="auth-submit">입장</button>
+    </form>
+  </div>
+
+  <div id="class-section" style="display:none">
+    <div class="card">
+      <h2>내 학급</h2>
+      <div id="class-list" class="class-list"></div>
+      <div class="empty" id="class-empty" style="display:none">등록된 학급이 없습니다. 아래에서 학급을 만들어보세요.</div>
+    </div>
+    <div class="card">
+      <h2>새 학급 만들기</h2>
+      <form id="class-form">
+        <div class="row">
+          <div class="field">
+            <label>학급 이름</label>
+            <input type="text" id="class-name" placeholder="예: 3학년 3반" required />
+          </div>
+          <div class="field">
+            <label>학년/반 (양식에 자동 입력)</label>
+            <input type="text" id="class-grade" placeholder="예: 3학년 3반" required />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-secondary btn-block">학급 만들기</button>
+      </form>
+    </div>
+    <button class="btn btn-ghost btn-block" id="btn-logout-2">로그아웃</button>
+  </div>
+</div>
+
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>
