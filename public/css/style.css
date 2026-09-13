@@ -1,5 +1,5 @@
 :root {
-  --bg: #ffdd1a;
+  --bg: #fff8e6;
   --card: #ffffff;
   --ink: #1e2a45;
   --sub: #5d6b85;
@@ -34,19 +34,15 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: var(--bg);
+  background:
+    radial-gradient(700px 380px at 10% -10%, #ffedb0 0%, transparent 60%),
+    radial-gradient(620px 340px at 105% 0%, #ffd7b0 0%, transparent 55%),
+    radial-gradient(520px 280px at 50% 115%, #e3ddfb 0%, transparent 55%),
+    var(--bg);
+  background-repeat: no-repeat;
   color: var(--ink);
   font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-
-/* 홈 화면은 단색, 로그인 후 안쪽 화면들은 은은한 그러데이션 */
-body.gradient-bg {
-  background:
-    radial-gradient(760px 420px at 12% -12%, #fff3a8 0%, transparent 62%),
-    radial-gradient(620px 360px at 105% 5%, #ffc23d 0%, transparent 55%),
-    var(--bg);
-  background-repeat: no-repeat;
 }
 
 a { color: inherit; }
