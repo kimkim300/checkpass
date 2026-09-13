@@ -1,9 +1,10 @@
 import {
   db, storage, collection, doc, addDoc, getDoc, setDoc, getDocs, updateDoc, deleteDoc,
-  ref, getDownloadURL, serverTimestamp,
+  ref, getBytes, uploadBytes, getDownloadURL, serverTimestamp,
 } from "./firebase-init.js";
 import { requireTeacherPage } from "./nav.js";
 import { guardConfig, toast, escapeHtml, todayStr, daysBetween, STATUS_LABEL, DOC_TYPES, getDocType, classLookupId } from "./utils.js";
+import { stampTeacherSignature } from "./pdf-fill.js";
 
 if (!guardConfig()) {
   requireTeacherPage("dashboard").then(({ cls }) => init(cls.id, cls));
@@ -54,6 +55,53 @@ async function init(classId, cls) {
       btn.disabled = false;
     }
   };
+
+  let teacherSigPath = "";
+  try {
+    const settingsSnap = await getDoc(settingsRef);
+    teacherSigPath = settingsSnap.exists() ? settingsSnap.data().teacherSigPath || "" : "";
+  } catch (e) {
+    console.error("담임 서명 불러오기 실패:", e);
+  }
+  async function renderSigPreview() {
+    const area = document.getElementById("teacher-sig-preview");
+    if (!teacherSigPath) { area.innerHTML = `<p class="page-sub" style="margin:0">아직 등록된 서명 이미지가 없습니다.</p>`; return; }
+    try {
+      const url = await getDownloadURL(ref(storage, teacherSigPath));
+      area.innerHTML = `<img src="${url}" alt="담임 서명" style="height:50px; border:1.5px solid var(--line); border-radius:10px; padding:6px; background:#fff" />`;
+    } catch (e) {
+      area.innerHTML = `<p class="page-sub" style="margin:0">이미지를 불러오지 못했습니다.</p>`;
+    }
+  }
+  await renderSigPreview();
+  document.getElementById("teacher-sig-save").onclick = async () => {
+    const file = document.getElementById("teacher-sig-input").files[0];
+    if (!file) return toast("이미지 파일을 선택해주세요.", true);
+    const btn = document.getElementById("teacher-sig-save");
+    btn.disabled = true;
+    try {
+      const path = `signatures/${classId}/teacher.png`;
+      await uploadBytes(ref(storage, path), file, { contentType: "image/png" });
+      await setDoc(settingsRef, { teacherSigPath: path }, { merge: true });
+      teacherSigPath = path;
+      await renderSigPreview();
+      toast("담임 서명 이미지가 저장되었습니다.");
+    } catch (err) {
+      console.error(err);
+      toast("저장 중 오류가 발생했습니다: " + err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  const templateFieldsCache = {}; // docType -> fields (담임 서명 위치 조회용, 최초 1회만 로드)
+  async function getTemplateFields(docType) {
+    if (templateFieldsCache[docType]) return templateFieldsCache[docType];
+    const snap = await getDoc(doc(db, "classes", classId, "templates", docType));
+    const fields = snap.exists() ? snap.data().fields || {} : {};
+    templateFieldsCache[docType] = fields;
+    return fields;
+  }
 
   let students = [];
   let records = [];
@@ -297,9 +345,29 @@ async function init(classId, cls) {
     });
     root.querySelectorAll("[data-approve]").forEach((btn) => {
       btn.onclick = async () => {
-        await updateDoc(doc(db, "classes", classId, "records", btn.dataset.approve), { status: "확인완료", updatedAt: serverTimestamp() });
-        toast("확인 처리되었습니다.");
-        await loadAll(); renderDateList();
+        btn.disabled = true;
+        try {
+          const r = records.find((x) => x.id === btn.dataset.approve);
+          if (r && r.pdfPath && teacherSigPath) {
+            const fields = await getTemplateFields(r.docType);
+            if (fields.teacherSig) {
+              const [pdfBytes, signatureBytes] = await Promise.all([
+                getBytes(ref(storage, r.pdfPath)),
+                getBytes(ref(storage, teacherSigPath)),
+              ]);
+              const stamped = await stampTeacherSignature({ pdfBytes, field: fields.teacherSig, signatureBytes });
+              await uploadBytes(ref(storage, r.pdfPath), stamped, { contentType: "application/pdf" });
+            }
+          }
+          await updateDoc(doc(db, "classes", classId, "records", btn.dataset.approve), { status: "확인완료", updatedAt: serverTimestamp() });
+          toast("확인 처리되었습니다.");
+          await loadAll(); renderDateList();
+        } catch (err) {
+          console.error(err);
+          toast("확인 처리 중 오류가 발생했습니다: " + err.message, true);
+        } finally {
+          btn.disabled = false;
+        }
       };
     });
     root.querySelectorAll("[data-reject]").forEach((btn) => {

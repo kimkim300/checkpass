@@ -71,6 +71,17 @@ export async function fillTemplate({ templateBytes, fields, values, signatureDat
   return pdfDoc.save();
 }
 
+// 이미 완성된 제출 PDF 위에 담임 서명(도장) 이미지만 추가로 얹는다.
+// "확인완료" 처리 시 호출되며, 한글 텍스트를 새로 그리지 않으므로 폰트가 필요 없다.
+export async function stampTeacherSignature({ pdfBytes, field, signatureBytes }) {
+  const { PDFDocument } = window.PDFLib;
+  const pdfDoc = await PDFDocument.load(pdfBytes);
+  const page = pdfDoc.getPages()[0];
+  const img = await pdfDoc.embedPng(signatureBytes);
+  page.drawImage(img, { x: field.x, y: field.y, width: field.width, height: field.height });
+  return pdfDoc.save();
+}
+
 export async function mergePdfs(byteArrays) {
   const { PDFDocument } = window.PDFLib;
   const merged = await PDFDocument.create();

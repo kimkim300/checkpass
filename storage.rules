@@ -25,5 +25,11 @@ service firebase.storage {
                       request.resource.contentType.matches('image/.*');
       allow delete: if request.auth != null;
     }
+
+    // 담임 서명(도장) 이미지: 교사가 업로드하고, "확인완료" 처리 시 브라우저가 다시 읽어서 PDF에 찍는다.
+    match /signatures/{classId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.resource.size < 5 * 1024 * 1024;
+    }
   }
 }

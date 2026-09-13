@@ -4,7 +4,7 @@ import { getCurrentClassId, setCurrentClassId } from "./utils.js";
 const TABS = [
   { key: "dashboard", label: "대시보드", href: "dashboard.html" },
   { key: "roster", label: "학생 명단", href: "roster.html" },
-  { key: "template", label: "결석계 양식", href: "template.html" },
+  { key: "template", label: "서류 양식", href: "template.html" },
   { key: "export", label: "서류 수합", href: "export.html" },
 ];
 
@@ -45,11 +45,11 @@ function renderNav(activeKey, cls) {
   mount.outerHTML = `
     <div class="topnav">
       <div class="topnav-inner">
+        <a href="index.html" class="nav-home-btn" title="홈으로">🏠</a>
         <div class="brand">${cls.name}
-          <small>${cls.grade ? cls.grade + " · " : ""}결석계 관리</small>
+          <small>${cls.grade ? cls.grade + " · " : ""}출결패스</small>
         </div>
         <div class="tabs">${tabsHtml}</div>
-        <a class="logout-btn" href="index.html">🏠 홈</a>
         <button class="logout-btn" id="nav-switch-class">학급 전환</button>
         <button class="logout-btn" id="nav-logout">로그아웃</button>
       </div>

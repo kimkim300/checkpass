@@ -158,14 +158,16 @@ async function init() {
       const studyPlan = document.getElementById("f-studyPlan").value.trim();
       const accompany = document.getElementById("f-accompany").value;
       const contact5day = document.getElementById("f-contact5day").value;
-      if (!contact || !purpose || !location || !studyPlan || !accompany || !contact5day) return toast("필수 항목을 모두 입력해주세요.", true);
-      values = { ...values, contact, purpose, location, studyPlan, accompany, contact5day };
-      recordExtra = { contact, purpose, location, studyPlan, accompany, contact5day };
+      const guardianName = document.getElementById("f-guardianName-apply").value.trim();
+      if (!contact || !purpose || !location || !studyPlan || !accompany || !contact5day || !guardianName) return toast("필수 항목을 모두 입력해주세요.", true);
+      values = { ...values, contact, purpose, location, studyPlan, accompany, contact5day, guardianName };
+      recordExtra = { contact, purpose, location, studyPlan, accompany, contact5day, guardianName };
     } else if (docType === "tripReport") {
       const reportContent = document.getElementById("f-reportContent").value.trim();
-      if (!reportContent) return toast("학습 내용을 입력해주세요.", true);
-      values = { ...values, reportContent };
-      recordExtra = { reportContent };
+      const guardianName = document.getElementById("f-guardianName-report").value.trim();
+      if (!reportContent || !guardianName) return toast("필수 항목을 모두 입력해주세요.", true);
+      values = { ...values, reportContent, guardianName };
+      recordExtra = { reportContent, guardianName };
     }
 
     const recRef = doc(collection(db, "classes", classId, "records"));

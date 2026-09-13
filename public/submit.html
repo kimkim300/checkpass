@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>서류 제출</title>
+<title>서류 제출 - 출결패스</title>
 <link rel="stylesheet" href="css/style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8E%AB</text></svg>">
 </head>
 <body>
 <div class="wrap narrow">
@@ -69,6 +70,7 @@
         <label>연속 5일 초과 시, 학생이 담임교사에게 연락하겠습니까? *</label>
         <select id="f-contact5day"><option value="">선택하세요</option><option value="예">예</option><option value="아니오">아니오</option></select>
       </div>
+      <div class="field"><label>보호자 성명 *</label><input type="text" id="f-guardianName-apply" /></div>
     </div>
 
     <div id="section-tripReport" class="doctype-section">
@@ -78,6 +80,7 @@
       </div>
       <div class="field"><label>일수 (주말 제외 자동 계산, 필요 시 수정) *</label><input type="number" class="f-days" min="0" /></div>
       <div class="field"><label>학습 내용 *</label><textarea id="f-reportContent" rows="8" placeholder="교외체험학습 중 어떤 교육활동을 했는지 구체적으로 적어주세요"></textarea></div>
+      <div class="field"><label>보호자 성명 *</label><input type="text" id="f-guardianName-report" /></div>
     </div>
 
     <div class="field">
