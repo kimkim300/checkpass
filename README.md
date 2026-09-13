@@ -33,26 +33,48 @@ export const firebaseConfig = {
 };
 ```
 
-## 3. 배포 (Firebase Hosting)
+## 3. 배포
 
-Node.js가 설치되어 있어야 합니다.
+**정식 주소는 Vercel입니다.** 이 GitHub 저장소가 Vercel 프로젝트와 연결되어 있어서,
+`main` 브랜치에 `git push`할 때마다 자동으로 재배포됩니다 (배포 대상 폴더는 `public/`).
+별도 명령 없이 커밋·푸시만 하면 됩니다.
+
+> `vercel.json`에서 모든 페이지를 `no-cache`로 설정해뒀습니다. 그래야 새로 배포한 내용이
+> 방문자 브라우저에 바로 반영되고, "분명 고쳤는데 예전 화면이 보인다" 같은 문제가 생기지 않습니다.
+
+Firestore/Storage 보안 규칙(`firestore.rules`, `storage.rules`)은 Vercel과 무관하게 Firebase 쪽에
+별도로 적용해야 합니다. Firebase CLI로 아래처럼 배포합니다.
 
 ```bash
 npm install -g firebase-tools
 firebase login
-firebase deploy
+firebase deploy --only firestore:rules,storage:rules
 ```
 
-배포가 끝나면 `https://<프로젝트ID>.web.app` 주소가 나옵니다. 이 주소로 어디서든(학부모 스마트폰 포함) 접속할 수 있습니다.
-
-> `firebase deploy` 시 `firestore.rules`, `storage.rules`도 함께 적용됩니다. 두 파일은 "본인 학급 데이터는 본인만 관리, 학부모는 로그인 없이 제출만 가능"하도록 이미 작성되어 있어 별도 설정이 필요 없습니다.
-
-### 배포 전에 로컬에서 미리 보기
+Storage에 새로운 배포 주소(도메인)를 추가로 쓰게 되면, `cors.json`에 그 주소를 추가한 뒤
+Google Cloud Shell(콘솔 우측 상단 ">_" 아이콘)에서 아래 명령으로 다시 적용해야 합니다.
 
 ```bash
-firebase emulators:start --only hosting
+gsutil cors set cors.json gs://<프로젝트ID>.firebasestorage.app
 ```
-또는 간단히 `npx serve public` 실행 후 브라우저로 열어도 됩니다. (파일을 더블클릭해서 여는 `file://` 방식은 동작하지 않습니다.)
+
+### 로컬에서 미리 보기
+
+```bash
+npx serve public
+```
+브라우저로 열어서 확인합니다. (파일을 더블클릭해서 여는 `file://` 방식은 동작하지 않습니다.)
+
+<details>
+<summary>참고: Firebase Hosting으로도 배포할 수 있습니다 (선택 사항)</summary>
+
+이 저장소에는 `firebase.json`의 hosting 설정도 남아 있어서, 원한다면 Firebase Hosting에도
+배포할 수 있습니다. 다만 현재는 Vercel을 정식 주소로 쓰기로 했으므로 필수는 아닙니다.
+
+```bash
+firebase deploy --only hosting
+```
+</details>
 
 ## 4. 사용 순서
 
