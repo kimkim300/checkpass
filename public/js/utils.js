@@ -98,9 +98,11 @@ export function classLookupId(name, code) {
 
 export const REASON_TYPES = ["출석인정결석", "질병결석", "기타결석"];
 
+export const DIRECT_INPUT = "직접입력";
+
 export const REASON_SUBTYPES = {
-  "출석인정결석": ["감염병", "경조사", "학생선수", "생리통"],
-  "질병결석": ["2일 이내", "3일 이상", "기저질환/만성질환"],
+  "출석인정결석": ["감염병", "경조사", "학생선수", "생리통", DIRECT_INPUT],
+  "질병결석": ["2일 이내", "3일 이상", "기저질환/만성질환", DIRECT_INPUT],
   "기타결석": [],
 };
 

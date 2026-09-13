@@ -4,7 +4,7 @@ import {
 } from "./firebase-init.js";
 import {
   guardConfig, toast, getParam, countWeekdays, formatKoreanDate, todayStr, escapeHtml,
-  REASON_SUBTYPES, DOC_TYPES,
+  REASON_SUBTYPES, DOC_TYPES, DIRECT_INPUT,
 } from "./utils.js";
 import { createSignaturePad } from "./signature-pad.js";
 import { fillTemplate } from "./pdf-fill.js";
@@ -44,8 +44,24 @@ async function init() {
   const studentSel = document.getElementById("f-student");
   studentSel.innerHTML = students.map((s) => `<option value="${s.id}">${escapeHtml(s.number)}번 ${escapeHtml(s.name)}</option>`).join("");
 
+  const DOC_TYPE_ICONS = { absence: "📋", tripApply: "🎒", tripReport: "📝" };
   const doctypeSel = document.getElementById("f-doctype");
-  doctypeSel.innerHTML = DOC_TYPES.filter((t) => templates[t.id]).map((t) => `<option value="${t.id}">${t.label}</option>`).join("");
+  const availableTypes = DOC_TYPES.filter((t) => templates[t.id]);
+  doctypeSel.innerHTML = availableTypes.map((t) => `<option value="${t.id}">${t.label}</option>`).join("");
+
+  const picker = document.getElementById("doctype-picker");
+  picker.innerHTML = availableTypes.map((t, i) => `
+    <button type="button" class="doctype-option${i === 0 ? " active" : ""}" data-type="${t.id}">
+      <span class="doctype-icon">${DOC_TYPE_ICONS[t.id] || "📄"}</span>
+      <span>${t.label}</span>
+    </button>`).join("");
+  picker.querySelectorAll(".doctype-option").forEach((btn) => {
+    btn.onclick = () => {
+      picker.querySelectorAll(".doctype-option").forEach((b) => b.classList.toggle("active", b === btn));
+      doctypeSel.value = btn.dataset.type;
+      doctypeSel.dispatchEvent(new Event("change"));
+    };
+  });
 
   function showSection(type) {
     document.querySelectorAll(".doctype-section").forEach((el) => (el.style.display = "none"));
@@ -132,7 +148,7 @@ async function init() {
       const reasonDetailRaw = document.getElementById("f-reasonDetail").value.trim();
       const guardianName = document.getElementById("f-guardianName").value.trim();
       if (!absenceType || !reasonDetailRaw || !guardianName) return toast("필수 항목을 모두 입력해주세요.", true);
-      const reasonDetail = subtype ? `[${subtype}] ${reasonDetailRaw}` : reasonDetailRaw;
+      const reasonDetail = (subtype && subtype !== DIRECT_INPUT) ? `[${subtype}] ${reasonDetailRaw}` : reasonDetailRaw;
       values = { ...values, absenceType, reasonDetail, guardianName };
       recordExtra = { absenceType, subtype, reasonDetail, guardianName };
     } else if (docType === "tripApply") {

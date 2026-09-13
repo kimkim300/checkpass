@@ -16,9 +16,12 @@
   --amber-soft: #fff3d6;
   --red: #e0526a;
   --red-soft: #fdeaee;
+  --violet: #8b6bf0;
+  --violet-soft: #ece6fd;
   --radius: 20px;
   --radius-sm: 14px;
   --shadow: 0 2px 4px rgba(30, 42, 69, .03), 0 10px 24px rgba(30, 42, 69, .06);
+  --grad-primary: linear-gradient(135deg, #21d69a, #0e8863);
 }
 
 * { box-sizing: border-box; }
@@ -26,7 +29,13 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  min-height: 100%;
+  background:
+    radial-gradient(620px 320px at 8% -8%, #cdf3e3 0%, transparent 60%),
+    radial-gradient(560px 300px at 105% 0%, #ffe6b8 0%, transparent 55%),
+    radial-gradient(480px 260px at 50% 115%, #e3ddfb 0%, transparent 55%),
+    var(--bg);
+  background-repeat: no-repeat;
   color: var(--ink);
   font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -161,8 +170,8 @@ input:focus, select:focus, textarea:focus {
   transition: transform .08s ease, background .15s ease;
 }
 .btn:active { transform: scale(.97); }
-.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 3px 0 var(--primary-dark); }
-.btn-primary:hover { background: #14bd8a; }
+.btn-primary { background: var(--grad-primary); color: #fff; box-shadow: 0 3px 0 var(--primary-dark); }
+.btn-primary:hover { filter: brightness(1.06); }
 .btn-secondary { background: var(--primary-soft); color: var(--primary-dark); }
 .btn-secondary:hover { background: #cdf0e2; }
 .btn-ghost { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
@@ -184,7 +193,7 @@ input:focus, select:focus, textarea:focus {
 }
 .badge-wait { background: var(--amber-soft); color: var(--amber); }
 .badge-done { background: var(--green-soft); color: var(--green); }
-.badge-checked { background: var(--primary-soft); color: var(--primary-dark); }
+.badge-checked { background: var(--violet-soft); color: var(--violet); }
 .badge-rejected { background: var(--red-soft); color: var(--red); }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -253,6 +262,41 @@ tr:last-child td { border-bottom: none; }
 }
 .home-icon.mint { background: var(--primary-soft); }
 .home-icon.yellow { background: var(--accent-soft); }
+
+.title-gradient {
+  background: linear-gradient(90deg, var(--primary-dark), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.doctype-picker { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.doctype-option {
+  flex: 1;
+  min-width: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 10px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--sub);
+  cursor: pointer;
+  transition: transform .1s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.doctype-option:hover { transform: translateY(-2px); }
+.doctype-option .doctype-icon { font-size: 26px; }
+.doctype-option.active {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+  background: linear-gradient(160deg, var(--primary-soft), #fff);
+  box-shadow: 0 6px 16px rgba(22, 169, 123, .18);
+}
 
 .tabbar {
   display: flex;
@@ -399,7 +443,14 @@ tr:last-child td { border-bottom: none; }
 .loading-block { text-align: center; padding: 60px 20px; color: var(--sub); font-size: 14px; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; }
-.stat-box { background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px; text-align: center; }
+.stat-box { position: relative; overflow: hidden; background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 16px; text-align: center; }
+.stat-box::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: var(--grad-primary);
+}
+.stat-box:nth-child(2)::before { background: linear-gradient(135deg, #ffcf6e, var(--accent-dark)); }
+.stat-box:nth-child(3)::before { background: linear-gradient(135deg, #a78bfa, var(--violet)); }
+.stat-box:nth-child(4)::before { background: linear-gradient(135deg, #f28fa3, var(--red)); }
 .stat-box .num { font-size: 26px; font-weight: 800; }
 .stat-box .lbl { font-size: 12.5px; color: var(--sub); margin-top: 2px; font-weight: 600; }
 

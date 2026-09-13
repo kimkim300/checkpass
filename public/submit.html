@@ -10,7 +10,7 @@
 <div class="wrap narrow">
   <div id="header-area" style="padding-top:24px">
     <p><a href="index.html" style="color:var(--sub); font-size:13px; text-decoration:none">← 홈으로</a></p>
-    <h1 id="class-title">서류 제출</h1>
+    <h1 id="class-title" class="title-gradient">서류 제출</h1>
     <p class="page-sub">제출할 서류를 선택하고 내용을 입력해주세요.</p>
   </div>
 
@@ -18,8 +18,9 @@
 
   <form id="submit-form" class="card" style="display:none">
     <div class="field">
-      <label>제출할 서류 *</label>
-      <select id="f-doctype" required></select>
+      <label>제출할 서류 선택 *</label>
+      <div class="doctype-picker" id="doctype-picker"></div>
+      <select id="f-doctype" required style="display:none"></select>
     </div>
     <div class="field">
       <label>학생 선택 *</label>
@@ -88,7 +89,7 @@
   </form>
 
   <div id="done-screen" class="card" style="display:none; text-align:center">
-    <div style="font-size:40px; margin-bottom:8px">✅</div>
+    <div style="width:76px; height:76px; margin:4px auto 12px; border-radius:50%; background:var(--grad-primary); display:flex; align-items:center; justify-content:center; font-size:36px; box-shadow:0 8px 20px rgba(22,169,123,.3)">✅</div>
     <h2>제출이 완료되었습니다</h2>
     <p class="page-sub">담임 선생님께 서류가 전달되었습니다.</p>
     <a class="btn btn-secondary" id="download-link" download="제출서류.pdf" href="#">제출한 서류 PDF 확인</a>
